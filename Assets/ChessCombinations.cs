@@ -9,42 +9,51 @@ using Rnd = UnityEngine.Random;
 
 public class ChessCombinations : MonoBehaviour {
 
-   public KMBombInfo Bomb;
-   public KMAudio Audio;
+    public KMBombInfo Bomb;
+    public KMAudio Audio;
 
-   static int ModuleIdCounter = 1;
-   int ModuleId;
-   private bool ModuleSolved;
+    public KMSelectable ColorBucket;
 
-   void Awake () {
-      ModuleId = ModuleIdCounter++;
-      /*
-      foreach (KMSelectable object in keypad) {
-          object.OnInteract += delegate () { keypadPress(object); return false; };
-      }
-      */
+    static int ModuleIdCounter = 1;
+    int ModuleId;
+    private bool ModuleSolved;
 
-      //button.OnInteract += delegate () { buttonPress(); return false; };
-
-   }
-
-   void Start () {
+    void Awake () {
+        ModuleId = ModuleIdCounter++;
+        /*
+        foreach (KMSelectable object in keypad) {
+            object.OnInteract += delegate () { keypadPress(object); return false; };
+        }
+        */
+        ColorBucket.OnInteract += delegate () { ColorSwitch(); return false; };
+        //button.OnInteract += delegate () { buttonPress(); return false; };
 
    }
 
-   void Update () {
+   void ColorSwitch()
+   {
+
+   }
+
+   void Start ()
+   {
+
+   }
+
+   void Update ()
+   {
 
    }
 
 #pragma warning disable 414
-   private readonly string TwitchHelpMessage = @"Use !{0} to do something.";
+    private readonly string TwitchHelpMessage = @"Use !{0} to do something.";
 #pragma warning restore 414
 
-   IEnumerator ProcessTwitchCommand (string Command) {
-      yield return null;
-   }
+    IEnumerator ProcessTwitchCommand (string Command) {
+        yield return null;
+    }
 
-   IEnumerator TwitchHandleForcedSolve () {
-      yield return null;
-   }
+    IEnumerator TwitchHandleForcedSolve () {
+        yield return null;
+    }
 }

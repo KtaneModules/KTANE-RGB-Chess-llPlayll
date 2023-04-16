@@ -25,10 +25,9 @@ public class ChessCombinations : MonoBehaviour {
             object.OnInteract += delegate () { keypadPress(object); return false; };
         }
         */
-        ColorBucket.OnInteract += delegate () { ColorSwitch(); return false; };
         //button.OnInteract += delegate () { buttonPress(); return false; };
-
-   }
+        ColorBucket.OnInteract += delegate () { ColorSwitch(); return false; };
+    }
 
    void ColorSwitch()
    {

@@ -7,35 +7,44 @@ using UnityEngine;
 using KModkit;
 using Rnd = UnityEngine.Random;
 
-public class ChessCombinations : MonoBehaviour {
+public class RGBChess : MonoBehaviour {
 
     public KMBombInfo Bomb;
     public KMAudio Audio;
+    public KMColorblindMode Colorblind;
 
     public KMSelectable ColorBucket;
-    public MeshRenderer KingTexture;
-    public MeshRenderer QueenTexture;
-    public MeshRenderer RookTexture;
-    public MeshRenderer BishopTexture;
-    public MeshRenderer KnightTexture;
-    public List<MeshRenderer> ButtonRenderers;
+    public List<KMSelectable> PieceButtons;
+    public List<MeshRenderer> PieceTextures;
+    public List<Material> PieceMaterials;
+    public List<MeshRenderer> GridButtonRenderers;
+    public List<KMSelectable> GridButtons;
+    public List<TextMesh> ColorblindTexts;
+    public List<GameObject> GridPieces;
+    public List<MeshRenderer> GridPieceRenderers;
+    public List<TextMesh> GridPieceColorblindTexts;
 
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
 
-    int currentColorIndex = 7;
     string randomPosition = "";
+    string randomColor = "";
+    string selectedPiece = "";
     List<string> randomPositions = new List<string> { };
     List<string> randomColors = new List<string> { };
     List<string> randomPieces = new List<string> { };
+    int currentColorIndex = 7;
+    int setColorIndex;
     int setRow;
     int setColumn;
+    int placedPieces;
 
     string pieces = "KQRBN";
     List<string> pieceNames = new List<string> { "King", "Queen", "Rook", "Bishop", "Knight" };
-    List<Color> colors = new List<Color> {Color.black, Color.red, Color.green, Color.blue, Color.cyan, Color.magenta, Color.yellow, Color.white};
+    List<Color> colors = new List<Color> { Color.black, Color.red, Color.green, Color.blue, Color.cyan, Color.magenta, Color.yellow, Color.white };
     List<string> binaryColors = new List<string> { "000", "100", "010", "001", "011", "101", "110", "111" };
+    List<string> shortColorNames = new List<string> { "K", "R", "G", "B", "C", "M", "Y", "W" };
     List<string> colorNames = new List<string> {"Black", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "White"};
     List<string> RedValues = new List<string>
     {
@@ -74,15 +83,18 @@ public class ChessCombinations : MonoBehaviour {
         "      "
     };
 
-    void Awake () {
+    void Awake()
+    {
         ModuleId = ModuleIdCounter++;
-        /*
-        foreach (KMSelectable object in keypad) {
-            object.OnInteract += delegate () { keypadPress(object); return false; };
-        }
-        */
-        //button.OnInteract += delegate () { buttonPress(); return false; };
         ColorBucket.OnInteract += delegate () { ColorSwitch(); return false; };
+        foreach (KMSelectable piece in PieceButtons)
+        {
+            piece.OnInteract += delegate () { PiecePressed(piece); return false; };
+        }
+        foreach (KMSelectable cell in GridButtons)
+        {
+            cell.OnInteract += delegate () { GridButtonPressed(cell); return false; };
+        }
     }
 
    void ColorSwitch()
@@ -95,16 +107,79 @@ public class ChessCombinations : MonoBehaviour {
 
         currentColorIndex = (currentColorIndex + 1) % 8;
 
-        KingTexture.material.color = colors[currentColorIndex];
-        QueenTexture.material.color = colors[currentColorIndex];
-        RookTexture.material.color = colors[currentColorIndex];
-        BishopTexture.material.color = colors[currentColorIndex];
-        KnightTexture.material.color = colors[currentColorIndex];
+        for (int i = 0; i < 5; i++)
+        {
+            PieceTextures[i].material.color = colors[currentColorIndex];
+        }
+        selectedPiece = shortColorNames[currentColorIndex];
+    }
+    
+    void PiecePressed(KMSelectable piece)
+    {
+        if (ModuleSolved)
+        {
+            return;
+        }
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, piece.transform);
+        piece.AddInteractionPunch();
+        for (int i = 0; i < PieceButtons.Count; i++)
+        {
+            if (piece == PieceButtons[i])
+            {
+                selectedPiece = shortColorNames[currentColorIndex] + pieces[i];
+                Debug.LogFormat("[RGB Chess #{0}] The {1} piece was pressed, selecting the {1}.", ModuleId, pieceNames[i]);
+                Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[i]);
+            }
+        }
+    }
+
+    void GridButtonPressed(KMSelectable cell)
+    {
+        if (ModuleSolved)
+        {
+            return;
+        }
+        for (int i = 0; i < GridButtons.Count; i++)
+        {
+            if (cell == GridButtons[i])
+            {
+                if (!GridPieces[i].activeSelf)
+                {
+                    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, GridPieces[i].transform);
+                    GridPieces[i].SetActive(true);
+                    GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
+                    GridPieceRenderers[i].material.color = colors[shortColorNames.IndexOf(selectedPiece[0].ToString())];
+                    if (Colorblind.ColorblindModeActive)
+                    {
+                        GridPieceColorblindTexts[i].text = selectedPiece[0].ToString();
+                    }
+                    else
+                    {
+                        GridPieceColorblindTexts[i].text = "";
+                    }
+                    placedPieces++;
+                }
+                else
+                {
+                    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, GridPieces[i].transform);
+                    GridPieces[i].SetActive(false);
+                    placedPieces--;
+                }
+                if (placedPieces == 6)
+                {
+                    Debug.Log("Checking submission");
+                }
+            }
+        }
     }
 
     void Start()
     {
         GenerateBoard();
+        for (int c = 0; c < 36; c++)
+        {
+            ColorblindTexts[c].gameObject.SetActive(Colorblind.ColorblindModeActive);
+        }
     }
 
     void GenerateBoard()
@@ -121,7 +196,13 @@ public class ChessCombinations : MonoBehaviour {
 
         for (int i = 0; i < 6; i++)
         {
-            randomColors.Add(Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString());
+            randomColor = Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString();
+            while (randomColor == "000")
+            {
+                randomColor = Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString();
+            }
+            randomColors.Add(randomColor);
+
         }
 
         for (int i = 0; i < 6; i++)
@@ -136,8 +217,8 @@ public class ChessCombinations : MonoBehaviour {
             LogGenColors(4), LogGenPieces(4), LogGenCoordinates(4),
             LogGenColors(5), LogGenPieces(5), LogGenCoordinates(5));
 
-        calculateBoardColors();
-        setBoardColors();
+        CalculateBoardColors();
+        SetBoardColors();
     }
 
     string LogGenCoordinates(int index)
@@ -155,54 +236,54 @@ public class ChessCombinations : MonoBehaviour {
         return pieceNames[pieces.IndexOf(randomPieces[index])];
     }
 
-    void calculateBoardColors()
+    void CalculateBoardColors()
     {
         for (int i = 0; i < 6; i++)
         {
             int row = Int32.Parse(randomPositions[i][0].ToString());
             int column = Int32.Parse(randomPositions[i][1].ToString());
-            addColorToCell(row, column, randomColors[i]);
+            AddColorToCell(row, column, randomColors[i]);
             switch (randomPieces[i])
             {
                 case "K":
                     if (row + 1 < 6)
                     {
-                        addColorToCell(row + 1, column, randomColors[i]);
+                        AddColorToCell(row + 1, column, randomColors[i]);
                         if (column + 1 < 6)
                         {
-                            addColorToCell(row + 1, column + 1, randomColors[i]);
+                            AddColorToCell(row + 1, column + 1, randomColors[i]);
                         }
                         if (column - 1 >= 0)
                         {
-                            addColorToCell(row + 1, column - 1, randomColors[i]);
+                            AddColorToCell(row + 1, column - 1, randomColors[i]);
                         }
                     }
                     if (row - 1 >= 0)
                     {
-                        addColorToCell(row - 1, column, randomColors[i]);
+                        AddColorToCell(row - 1, column, randomColors[i]);
                         if (column + 1 < 6)
                         {
-                            addColorToCell(row - 1, column + 1, randomColors[i]);
+                            AddColorToCell(row - 1, column + 1, randomColors[i]);
                         }
                         if (column - 1 >= 0)
                         {
-                            addColorToCell(row - 1, column - 1, randomColors[i]);
+                            AddColorToCell(row - 1, column - 1, randomColors[i]);
                         }
                     }
                     if (column + 1 < 6)
                     {
-                        addColorToCell(row, column + 1, randomColors[i]);
+                        AddColorToCell(row, column + 1, randomColors[i]);
                     }
                     if (column - 1 >= 0)
                     {
-                        addColorToCell(row, column - 1, randomColors[i]);
+                        AddColorToCell(row, column - 1, randomColors[i]);
                     }
                     break;
                 case "R":
                     for (int r = 0; r < 6; r++)
                     {
-                        addColorToCell(row, r, randomColors[i]);
-                        addColorToCell(r, column, randomColors[i]);
+                        AddColorToCell(row, r, randomColors[i]);
+                        AddColorToCell(r, column, randomColors[i]);
                     }
                     break;
                 case "B":
@@ -212,22 +293,22 @@ public class ChessCombinations : MonoBehaviour {
                         {
                             if (column + b < 6)
                             {
-                                addColorToCell(row + b, column + b, randomColors[i]);
+                                AddColorToCell(row + b, column + b, randomColors[i]);
                             }
                             if (column - b >= 0)
                             {
-                                addColorToCell(row + b, column - b, randomColors[i]);
+                                AddColorToCell(row + b, column - b, randomColors[i]);
                             }
                         }
                         if (row - b >= 0)
                         {
                             if (column + b < 6)
                             {
-                                addColorToCell(row - b, column + b, randomColors[i]);
+                                AddColorToCell(row - b, column + b, randomColors[i]);
                             }
                             if (column - b >= 0)
                             {
-                                addColorToCell(row - b, column - b, randomColors[i]);
+                                AddColorToCell(row - b, column - b, randomColors[i]);
                             }
                         }
                     }
@@ -235,28 +316,28 @@ public class ChessCombinations : MonoBehaviour {
                 case "Q":
                     for (int q = 0; q < 6; q++)
                     {
-                        addColorToCell(row, q, randomColors[i]);
-                        addColorToCell(q, column, randomColors[i]);
+                        AddColorToCell(row, q, randomColors[i]);
+                        AddColorToCell(q, column, randomColors[i]);
                         if (row + q < 6)
                         {
                             if (column + q < 6)
                             {
-                                addColorToCell(row + q, column + q, randomColors[i]);
+                                AddColorToCell(row + q, column + q, randomColors[i]);
                             }
                             if (column - q >= 0)
                             {
-                                addColorToCell(row + q, column - q, randomColors[i]);
+                                AddColorToCell(row + q, column - q, randomColors[i]);
                             }
                         }
                         if (row - q >= 0)
                         {
                             if (column + q < 6)
                             {
-                                addColorToCell(row - q, column + q, randomColors[i]);
+                                AddColorToCell(row - q, column + q, randomColors[i]);
                             }
                             if (column - q >= 0)
                             {
-                                addColorToCell(row - q, column - q, randomColors[i]);
+                                AddColorToCell(row - q, column - q, randomColors[i]);
                             }
                         }
                     }
@@ -266,44 +347,44 @@ public class ChessCombinations : MonoBehaviour {
                     {
                         if (column - 1 >= 0)
                         {
-                            addColorToCell(row - 2, column - 1, randomColors[i]);
+                            AddColorToCell(row - 2, column - 1, randomColors[i]);
                         }
                         if (column + 1 < 6)
                         {
-                            addColorToCell(row - 2, column + 1, randomColors[i]);
+                            AddColorToCell(row - 2, column + 1, randomColors[i]);
                         }
                     }
                     if (row + 2 < 6)
                     {
                         if (column - 1 >= 0)
                         {
-                            addColorToCell(row + 2, column - 1, randomColors[i]);
+                            AddColorToCell(row + 2, column - 1, randomColors[i]);
                         }
                         if (column + 1 < 6)
                         {
-                            addColorToCell(row + 2, column + 1, randomColors[i]);
+                            AddColorToCell(row + 2, column + 1, randomColors[i]);
                         }
                     }
                     if (column - 2 >= 0)
                     {
                         if (row - 1 >= 0)
                         {
-                            addColorToCell(row - 1, column - 2, randomColors[i]);
+                            AddColorToCell(row - 1, column - 2, randomColors[i]);
                         }
                         if (row + 1 < 6)
                         {
-                            addColorToCell(row + 1, column - 2, randomColors[i]);
+                            AddColorToCell(row + 1, column - 2, randomColors[i]);
                         }
                     }
-                    if (column + 2 >= 0)
+                    if (column + 2 < 6)
                     {
                         if (row - 1 >= 0)
                         {
-                            addColorToCell(row - 1, column + 2, randomColors[i]);
+                            AddColorToCell(row - 1, column + 2, randomColors[i]);
                         }
                         if (row + 1 < 6)
                         {
-                            addColorToCell(row + 1, column + 2, randomColors[i]);
+                            AddColorToCell(row + 1, column + 2, randomColors[i]);
                         }
                     }
                     break;
@@ -313,21 +394,28 @@ public class ChessCombinations : MonoBehaviour {
         }
     }
 
-    void addColorToCell(int row, int column, string color)
+    void AddColorToCell(int row, int column, string color)
     {
         RedValues[row] = RedValues[row].Substring(0, column) + ((RedValues[row][column] + color[0]) % 2).ToString() + RedValues[row].Substring(column + 1);
         GreenValues[row] = GreenValues[row].Substring(0, column) + ((GreenValues[row][column] + color[1]) % 2).ToString() + GreenValues[row].Substring(column + 1);
         BlueValues[row] = BlueValues[row].Substring(0, column) + ((BlueValues[row][column] + color[2]) % 2).ToString() + BlueValues[row].Substring(column + 1);
     }
 
-    void setBoardColors()
+    void SetBoardColors()
     {
         for (int i = 0; i < 36; i++)
         {
-            setRow = (int)(i / 6);
+            setRow = i / 6;
             setColumn = i % 6;
-            ButtonRenderers[i].material.color = colors[binaryColors.IndexOf(RedValues[setRow][setColumn].ToString() + GreenValues[setRow][setColumn].ToString() + BlueValues[setRow][setColumn].ToString())];
+            setColorIndex = binaryColors.IndexOf(RedValues[setRow][setColumn].ToString() + GreenValues[setRow][setColumn].ToString() + BlueValues[setRow][setColumn].ToString());
+            GridButtonRenderers[i].material.color = colors[setColorIndex];
+            ColorblindTexts[i].text = shortColorNames[setColorIndex];
         }
+    }
+
+    void Submit()
+    {
+
     }
 
     void Update()

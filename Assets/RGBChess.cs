@@ -19,6 +19,7 @@ public class RGBChess : MonoBehaviour {
     public List<KMSelectable> PieceButtons;
     public List<MeshRenderer> PieceTextures;
     public List<Material> PieceMaterials;
+    public Material DefaultPieceMaterial;
     public List<MeshRenderer> GridButtonRenderers;
     public List<KMSelectable> GridButtons;
     public List<TextMesh> GridColorblindTexts;
@@ -36,11 +37,15 @@ public class RGBChess : MonoBehaviour {
     List<string> randomPositions = new List<string> { };
     List<string> randomColors = new List<string> { };
     List<string> randomPieces = new List<string> { };
+    List<string> submissionPositions = new List<string> { };
+    List<string> submissionColors = new List<string> { };
+    List<string> submissionPieces = new List<string> { };
     int currentColorIndex = 7;
     int setColorIndex;
     int setRow;
     int setColumn;
     int placedPieces;
+    bool solveFlag;
 
     string pieces = "KQRBN";
     List<string> pieceNames = new List<string> { "King", "Queen", "Rook", "Bishop", "Knight" };
@@ -75,15 +80,10 @@ public class RGBChess : MonoBehaviour {
         "000000",
         "000000"
     };
-    List<string> Pieces = new List<string>
-    {
-        "      ",
-        "      ",
-        "      ",
-        "      ",
-        "      ",
-        "      "
-    };
+    List<string> SubmissionRedValues = new List<string> { };
+    List<string> SubmissionGreenValues = new List<string> { };
+    List<string> SubmissionBlueValues = new List<string> { };
+
 
     void Awake()
     {
@@ -138,7 +138,7 @@ public class RGBChess : MonoBehaviour {
             {
                 selectedPiece = shortColorNames[currentColorIndex] + pieces[i];
                 Debug.LogFormat("[RGB Chess #{0}] The {1} piece was pressed, selecting the {1}.", ModuleId, pieceNames[i]);
-                Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[i]);
+                Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is a {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[i]);
             }
         }
     }
@@ -159,6 +159,8 @@ public class RGBChess : MonoBehaviour {
                 {
                     if (!GridPieces[i].activeSelf)
                     {
+                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i / 6].ToString() + (i % 6 + 1).ToString(),
+                            colorNames[shortColorNames.IndexOf(selectedPiece[0].ToString())], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
 
                         GridPieces[i].SetActive(true);
                         GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
@@ -176,6 +178,8 @@ public class RGBChess : MonoBehaviour {
                     }
                     else
                     {
+                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but there is already a piece on it, removing the piece placed on {1}.", ModuleId, "ABCDEF"[i / 6].ToString() + (i % 6 + 1).ToString());
+                        GridPieceRenderers[i].material = DefaultPieceMaterial;
                         GridPieces[i].SetActive(false);
                         placedPieces--;
                         if (Colorblind.ColorblindModeActive)
@@ -188,9 +192,14 @@ public class RGBChess : MonoBehaviour {
                         }
                     }
                 }
+                else
+                {
+                    Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but a piece is not selected, doing nothing.", ModuleId, "ABCDEF"[i / 6].ToString() + (i % 6 + 1).ToString());
+                }
                 if (placedPieces == 6)
                 {
-                    Debug.Log("Checking submission");
+                    Debug.LogFormat("[RGB Chess #{0}] 6 Pieces were placed, checking submission.", ModuleId);
+                    SubmissionCheck();
                 }
             }
         }
@@ -234,80 +243,80 @@ public class RGBChess : MonoBehaviour {
             randomPieces.Add(pieces[Rnd.Range(0, 5)].ToString());
         }
         Debug.LogFormat("[RGB Chess #{0}] The generated pieces are - {1} {2} at {3}, {4} {5} at {6}, {7} {8} at {9}, {10} {11} at {12}, {13} {14} at {15} and {16} {17} at {18}", ModuleId,
-            LogGenColors(0), LogGenPieces(0), LogGenCoordinates(0),
-            LogGenColors(1), LogGenPieces(1), LogGenCoordinates(1),
-            LogGenColors(2), LogGenPieces(2), LogGenCoordinates(2),
-            LogGenColors(3), LogGenPieces(3), LogGenCoordinates(3),
-            LogGenColors(4), LogGenPieces(4), LogGenCoordinates(4),
-            LogGenColors(5), LogGenPieces(5), LogGenCoordinates(5));
+            LogColors(0, randomColors), LogPieces(0, randomPieces), LogCoordinates(0, randomPositions),
+            LogColors(1, randomColors), LogPieces(1, randomPieces), LogCoordinates(1, randomPositions),
+            LogColors(2, randomColors), LogPieces(2, randomPieces), LogCoordinates(2, randomPositions),
+            LogColors(3, randomColors), LogPieces(3, randomPieces), LogCoordinates(3, randomPositions),
+            LogColors(4, randomColors), LogPieces(4, randomPieces), LogCoordinates(4, randomPositions),
+            LogColors(5, randomColors), LogPieces(5, randomPieces), LogCoordinates(5, randomPositions));
 
-        CalculateBoardColors();
+        CalculateBoardColors(RedValues, GreenValues, BlueValues, randomPositions, randomColors, randomPieces);
         SetBoardColors();
     }
 
-    string LogGenCoordinates(int index)
+    string LogCoordinates(int index, List<string> positions)
     {
-        return "ABCDEF"[Int32.Parse(randomPositions[index][1].ToString())].ToString() + (Int32.Parse(randomPositions[index][0].ToString()) + 1).ToString();
+        return "ABCDEF"[Int32.Parse(positions[index][1].ToString())].ToString() + (Int32.Parse(positions[index][0].ToString()) + 1).ToString();
     }
 
-    string LogGenColors(int index)
+    string LogColors(int index, List<string> colors)
     {
-        return colorNames[binaryColors.IndexOf(randomColors[index])];
+        return colorNames[binaryColors.IndexOf(colors[index])];
     }
 
-    string LogGenPieces(int index)
+    string LogPieces(int index, List<string> piecesList)
     {
-        return pieceNames[pieces.IndexOf(randomPieces[index])];
+        return pieceNames[pieces.IndexOf(piecesList[index])];
     }
 
-    void CalculateBoardColors()
+    void CalculateBoardColors(List<string> redGrid, List<string> greenGrid, List<string> blueGrid, List<string> positions, List<string> colors, List<string> pieces)
     {
         for (int i = 0; i < 6; i++)
         {
-            int row = Int32.Parse(randomPositions[i][0].ToString());
-            int column = Int32.Parse(randomPositions[i][1].ToString());
-            AddColorToCell(row, column, randomColors[i]);
-            switch (randomPieces[i])
+            int row = Int32.Parse(positions[i][0].ToString());
+            int column = Int32.Parse(positions[i][1].ToString());
+            AddColorToCell(row, column, colors[i], redGrid, greenGrid, blueGrid);
+            switch (pieces[i])
             {
                 case "K":
                     if (row + 1 < 6)
                     {
-                        AddColorToCell(row + 1, column, randomColors[i]);
+                        AddColorToCell(row + 1, column, colors[i], redGrid, greenGrid, blueGrid);
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row + 1, column + 1, randomColors[i]);
+                            AddColorToCell(row + 1, column + 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row + 1, column - 1, randomColors[i]);
+                            AddColorToCell(row + 1, column - 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                     }
                     if (row - 1 >= 0)
                     {
-                        AddColorToCell(row - 1, column, randomColors[i]);
+                        AddColorToCell(row - 1, column, colors[i], redGrid, greenGrid, blueGrid);
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row - 1, column + 1, randomColors[i]);
+                            AddColorToCell(row - 1, column + 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row - 1, column - 1, randomColors[i]);
+                            AddColorToCell(row - 1, column - 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                     }
                     if (column + 1 < 6)
                     {
-                        AddColorToCell(row, column + 1, randomColors[i]);
+                        AddColorToCell(row, column + 1, colors[i], redGrid, greenGrid, blueGrid);
                     }
                     if (column - 1 >= 0)
                     {
-                        AddColorToCell(row, column - 1, randomColors[i]);
+                        AddColorToCell(row, column - 1, colors[i], redGrid, greenGrid, blueGrid);
                     }
                     break;
                 case "R":
                     for (int r = 0; r < 6; r++)
                     {
-                        AddColorToCell(row, r, randomColors[i]);
-                        AddColorToCell(r, column, randomColors[i]);
+                        AddColorToCell(row, r, colors[i], redGrid, greenGrid, blueGrid);
+                        AddColorToCell(r, column, colors[i], redGrid, greenGrid, blueGrid);
                     }
                     break;
                 case "B":
@@ -317,22 +326,22 @@ public class RGBChess : MonoBehaviour {
                         {
                             if (column + b < 6)
                             {
-                                AddColorToCell(row + b, column + b, randomColors[i]);
+                                AddColorToCell(row + b, column + b, colors[i], redGrid, greenGrid, blueGrid);
                             }
                             if (column - b >= 0)
                             {
-                                AddColorToCell(row + b, column - b, randomColors[i]);
+                                AddColorToCell(row + b, column - b, colors[i], redGrid, greenGrid, blueGrid);
                             }
                         }
                         if (row - b >= 0)
                         {
                             if (column + b < 6)
                             {
-                                AddColorToCell(row - b, column + b, randomColors[i]);
+                                AddColorToCell(row - b, column + b, colors[i], redGrid, greenGrid, blueGrid);
                             }
                             if (column - b >= 0)
                             {
-                                AddColorToCell(row - b, column - b, randomColors[i]);
+                                AddColorToCell(row - b, column - b, colors[i], redGrid, greenGrid, blueGrid);
                             }
                         }
                     }
@@ -340,28 +349,28 @@ public class RGBChess : MonoBehaviour {
                 case "Q":
                     for (int q = 0; q < 6; q++)
                     {
-                        AddColorToCell(row, q, randomColors[i]);
-                        AddColorToCell(q, column, randomColors[i]);
+                        AddColorToCell(row, q, colors[i], redGrid, greenGrid, blueGrid);
+                        AddColorToCell(q, column, colors[i], redGrid, greenGrid, blueGrid);
                         if (row + q < 6)
                         {
                             if (column + q < 6)
                             {
-                                AddColorToCell(row + q, column + q, randomColors[i]);
+                                AddColorToCell(row + q, column + q, colors[i], redGrid, greenGrid, blueGrid);
                             }
                             if (column - q >= 0)
                             {
-                                AddColorToCell(row + q, column - q, randomColors[i]);
+                                AddColorToCell(row + q, column - q, colors[i], redGrid, greenGrid, blueGrid);
                             }
                         }
                         if (row - q >= 0)
                         {
                             if (column + q < 6)
                             {
-                                AddColorToCell(row - q, column + q, randomColors[i]);
+                                AddColorToCell(row - q, column + q, colors[i], redGrid, greenGrid, blueGrid);
                             }
                             if (column - q >= 0)
                             {
-                                AddColorToCell(row - q, column - q, randomColors[i]);
+                                AddColorToCell(row - q, column - q, colors[i], redGrid, greenGrid, blueGrid);
                             }
                         }
                     }
@@ -371,44 +380,44 @@ public class RGBChess : MonoBehaviour {
                     {
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row - 2, column - 1, randomColors[i]);
+                            AddColorToCell(row - 2, column - 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row - 2, column + 1, randomColors[i]);
+                            AddColorToCell(row - 2, column + 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                     }
                     if (row + 2 < 6)
                     {
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row + 2, column - 1, randomColors[i]);
+                            AddColorToCell(row + 2, column - 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row + 2, column + 1, randomColors[i]);
+                            AddColorToCell(row + 2, column + 1, colors[i], redGrid, greenGrid, blueGrid);
                         }
                     }
                     if (column - 2 >= 0)
                     {
                         if (row - 1 >= 0)
                         {
-                            AddColorToCell(row - 1, column - 2, randomColors[i]);
+                            AddColorToCell(row - 1, column - 2, colors[i], redGrid, greenGrid, blueGrid);
                         }
                         if (row + 1 < 6)
                         {
-                            AddColorToCell(row + 1, column - 2, randomColors[i]);
+                            AddColorToCell(row + 1, column - 2, colors[i], redGrid, greenGrid, blueGrid);
                         }
                     }
                     if (column + 2 < 6)
                     {
                         if (row - 1 >= 0)
                         {
-                            AddColorToCell(row - 1, column + 2, randomColors[i]);
+                            AddColorToCell(row - 1, column + 2, colors[i], redGrid, greenGrid, blueGrid);
                         }
                         if (row + 1 < 6)
                         {
-                            AddColorToCell(row + 1, column + 2, randomColors[i]);
+                            AddColorToCell(row + 1, column + 2, colors[i], redGrid, greenGrid, blueGrid);
                         }
                     }
                     break;
@@ -418,11 +427,11 @@ public class RGBChess : MonoBehaviour {
         }
     }
 
-    void AddColorToCell(int row, int column, string color)
+    void AddColorToCell(int row, int column, string color, List<string> redGrid, List<string> greenGrid, List<string> blueGrid)
     {
-        RedValues[row] = RedValues[row].Substring(0, column) + ((RedValues[row][column] + color[0]) % 2).ToString() + RedValues[row].Substring(column + 1);
-        GreenValues[row] = GreenValues[row].Substring(0, column) + ((GreenValues[row][column] + color[1]) % 2).ToString() + GreenValues[row].Substring(column + 1);
-        BlueValues[row] = BlueValues[row].Substring(0, column) + ((BlueValues[row][column] + color[2]) % 2).ToString() + BlueValues[row].Substring(column + 1);
+        redGrid[row] = redGrid[row].Substring(0, column) + ((redGrid[row][column] + color[0]) % 2).ToString() + redGrid[row].Substring(column + 1);
+        greenGrid[row] = greenGrid[row].Substring(0, column) + ((greenGrid[row][column] + color[1]) % 2).ToString() + greenGrid[row].Substring(column + 1);
+        blueGrid[row] = blueGrid[row].Substring(0, column) + ((blueGrid[row][column] + color[2]) % 2).ToString() + blueGrid[row].Substring(column + 1);
     }
 
     void SetBoardColors()
@@ -437,9 +446,157 @@ public class RGBChess : MonoBehaviour {
         }
     }
 
-    void Submit()
+    void SubmissionCheck()
     {
+        SubmissionRedValues = new List<string>
+        {
+        "000000",
+        "000000",
+        "000000",
+        "000000",
+        "000000",
+        "000000"
+        };
+        SubmissionGreenValues = new List<string>
+        {
+        "000000",
+        "000000",
+        "000000",
+        "000000",
+        "000000",
+        "000000"
+        };
+        SubmissionBlueValues = new List<string>
+        {
+        "000000",
+        "000000",
+        "000000",
+        "000000",
+        "000000",
+        "000000"
+        };
+        submissionPositions = new List<string> { };
+        submissionColors = new List<string> { };
+        submissionPieces = new List<string> { };
+        solveFlag = true;
+        for (int i = 0; i < 36; i++)
+        {
+            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+            {
+                submissionPositions.Add(((int)(i / 6)).ToString() + (i % 6).ToString());
+                switch (GridPieceRenderers[i].material.ToString())
+                {
+                    case "King (Instance) (UnityEngine.Material)":
+                        submissionPieces.Add("K");
+                        break;
+                    case "Queen (Instance) (UnityEngine.Material)":
+                        submissionPieces.Add("Q");
+                        break;
+                    case "Rook (Instance) (UnityEngine.Material)":
+                        submissionPieces.Add("R");
+                        break;
+                    case "Bishop (Instance) (UnityEngine.Material)":
+                        submissionPieces.Add("B");
+                        break;
+                    case "Knight (Instance) (UnityEngine.Material)":
+                        submissionPieces.Add("N");
+                        break;
+                }
+                switch (GridPieceRenderers[i].material.color.ToString())
+                {
+                    case "RGBA(0.000, 0.000, 0.000, 1.000)":
+                        submissionColors.Add("000");
+                        break;
+                    case "RGBA(1.000, 0.000, 0.000, 1.000)":
+                        submissionColors.Add("100");
+                        break;
+                    case "RGBA(0.000, 1.000, 0.000, 1.000)":
+                        submissionColors.Add("010");
+                        break;
+                    case "RGBA(0.000, 0.000, 1.000, 1.000)":
+                        submissionColors.Add("001");
+                        break;
+                    case "RGBA(0.000, 1.000, 1.000, 1.000)":
+                        submissionColors.Add("011");
+                        break;
+                    case "RGBA(1.000, 0.000, 1.000, 1.000)":
+                        submissionColors.Add("101");
+                        break;
+                    case "RGBA(1.000, 0.922, 0.016, 1.000)":
+                        submissionColors.Add("110");
+                        break;
+                    case "RGBA(1.000, 1.000, 1.000, 1.000)":
+                        submissionColors.Add("111");
+                        break;
+                }
+            }
+        }
+        Debug.LogFormat("[RGB Chess {0}] Submitted solution is - {1} {2} at {3}, {4} {5} at {6}, {7} {8} at {9}, {10} {11} at {12}, {13} {14} at {15} and {16} {17} at {18}", ModuleId,
+            LogColors(0, submissionColors), LogPieces(0, submissionPieces), LogCoordinates(0, submissionPositions),
+            LogColors(1, submissionColors), LogPieces(1, submissionPieces), LogCoordinates(1, submissionPositions),
+            LogColors(2, submissionColors), LogPieces(2, submissionPieces), LogCoordinates(2, submissionPositions),
+            LogColors(3, submissionColors), LogPieces(3, submissionPieces), LogCoordinates(3, submissionPositions),
+            LogColors(4, submissionColors), LogPieces(4, submissionPieces), LogCoordinates(4, submissionPositions),
+            LogColors(5, submissionColors), LogPieces(5, submissionPieces), LogCoordinates(5, submissionPositions));
+        CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions, submissionColors, submissionPieces);
 
+        for (int i = 0; i < 6; i++)
+        {
+            if (RedValues[i] != SubmissionRedValues[i] || GreenValues[i] != SubmissionGreenValues[i] || BlueValues[i] != SubmissionBlueValues[i])
+            {
+                solveFlag = false;
+            }
+        }
+        if (solveFlag)
+        {
+            Debug.LogFormat("[RGB Chess {0}] Submitted solution generated the same colors as the initial ones, module solved.", ModuleId);
+            GetComponent<KMBombModule>().HandlePass();
+            ModuleSolved = true;
+            for (int i = 0; i < 36; i++)
+            {
+                GridButtonRenderers[i].material.color = Color.green;
+                GridColorblindTexts[i].text = "!";
+                if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+                {
+                    GridPieceRenderers[i].material.color = Color.green;
+                    GridPieceColorblindTexts[i].text = "";
+                }
+            }
+        }
+        else
+        {
+            Debug.LogFormat("[RGB Chess {0}] Submitted solution did not generate the same colors as the initial ones, strike!", ModuleId);
+            GetComponent<KMBombModule>().HandleStrike();
+            StartCoroutine(ModuleStrike());
+        }
+    }
+
+    IEnumerator ModuleStrike()
+    {
+        for (int i = 0; i < 36; i++)
+        {
+            GridButtonRenderers[i].material.color = Color.red;
+            GridColorblindTexts[i].text = "X";
+            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+            {
+                GridPieceRenderers[i].material.color = Color.red;
+                GridPieceColorblindTexts[i].text = "";
+            }
+        }
+
+        yield return new WaitForSeconds(2);
+
+        placedPieces = 0;
+        for (int i = 0; i < 36; i++)
+        {
+            GridPieces[i].SetActive(false);
+            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+            {
+                GridPieceRenderers[i].material = DefaultPieceMaterial;
+            }
+        }
+
+        SetBoardColors();
     }
 
     void Update()

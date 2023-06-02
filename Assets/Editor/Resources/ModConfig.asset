@@ -11,10 +11,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 615501dbe4f3fe94fbf4b564abb10237, type: 3}
   m_Name: ModConfig
   m_EditorClassIdentifier: 
-  id: template
-  title: Template
-  author: 
-  description: 
-  version: 
+  id: RGBChess
+  title: RGB Chess
+  author: _Play_
+  description: 'I don''t remember chess having so many sides...
+
+
+    RGB Chess.
+
+
+    Developed by Play.'
+  version: 1
   outputFolder: build
   previewImage: {fileID: 0}

@@ -13,13 +13,15 @@ public class RGBChess : MonoBehaviour {
     public KMAudio Audio;
     public KMColorblindMode Colorblind;
 
-    public KMSelectable ColorBucket;
+    public KMSelectable ColorSwitcher;
+    public MeshRenderer ColorSwitcherRenderer;
+    public TextMesh ColorSwitcherColorblindText;
     public List<KMSelectable> PieceButtons;
     public List<MeshRenderer> PieceTextures;
     public List<Material> PieceMaterials;
     public List<MeshRenderer> GridButtonRenderers;
     public List<KMSelectable> GridButtons;
-    public List<TextMesh> ColorblindTexts;
+    public List<TextMesh> GridColorblindTexts;
     public List<GameObject> GridPieces;
     public List<MeshRenderer> GridPieceRenderers;
     public List<TextMesh> GridPieceColorblindTexts;
@@ -86,7 +88,7 @@ public class RGBChess : MonoBehaviour {
     void Awake()
     {
         ModuleId = ModuleIdCounter++;
-        ColorBucket.OnInteract += delegate () { ColorSwitch(); return false; };
+        ColorSwitcher.OnInteract += delegate () { ColorSwitch(); return false; };
         foreach (KMSelectable piece in PieceButtons)
         {
             piece.OnInteract += delegate () { PiecePressed(piece); return false; };
@@ -103,7 +105,7 @@ public class RGBChess : MonoBehaviour {
         {
             return;
         }
-        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, ColorBucket.transform);
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, ColorSwitcher.transform);
 
         currentColorIndex = (currentColorIndex + 1) % 8;
 
@@ -111,7 +113,16 @@ public class RGBChess : MonoBehaviour {
         {
             PieceTextures[i].material.color = colors[currentColorIndex];
         }
-        selectedPiece = shortColorNames[currentColorIndex];
+        ColorSwitcherRenderer.material.color = colors[currentColorIndex];
+        ColorSwitcherColorblindText.text = shortColorNames[currentColorIndex];
+
+        Debug.LogFormat("[RGB Chess #{0}] The color switcher was press, switching colors, current color is {1}.", ModuleId, colorNames[currentColorIndex]);
+
+        if (selectedPiece != "")
+        {
+            selectedPiece = shortColorNames[currentColorIndex] + selectedPiece[1];
+            Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
+        }   
     }
     
     void PiecePressed(KMSelectable piece)
@@ -121,7 +132,6 @@ public class RGBChess : MonoBehaviour {
             return;
         }
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, piece.transform);
-        piece.AddInteractionPunch();
         for (int i = 0; i < PieceButtons.Count; i++)
         {
             if (piece == PieceButtons[i])
@@ -139,31 +149,44 @@ public class RGBChess : MonoBehaviour {
         {
             return;
         }
+        Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, cell.transform);
+        cell.AddInteractionPunch();
         for (int i = 0; i < GridButtons.Count; i++)
         {
             if (cell == GridButtons[i])
             {
-                if (!GridPieces[i].activeSelf)
+                if (selectedPiece != "")
                 {
-                    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, GridPieces[i].transform);
-                    GridPieces[i].SetActive(true);
-                    GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
-                    GridPieceRenderers[i].material.color = colors[shortColorNames.IndexOf(selectedPiece[0].ToString())];
-                    if (Colorblind.ColorblindModeActive)
+                    if (!GridPieces[i].activeSelf)
                     {
-                        GridPieceColorblindTexts[i].text = selectedPiece[0].ToString();
+
+                        GridPieces[i].SetActive(true);
+                        GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
+                        GridPieceRenderers[i].material.color = colors[shortColorNames.IndexOf(selectedPiece[0].ToString())];
+                        if (Colorblind.ColorblindModeActive)
+                        {
+                            GridColorblindTexts[i].text = "";
+                            GridPieceColorblindTexts[i].text = selectedPiece[0].ToString() + selectedPiece[1].ToString();
+                        }
+                        else
+                        {
+                            GridPieceColorblindTexts[i].text = "";
+                        }
+                        placedPieces++;
                     }
                     else
                     {
-                        GridPieceColorblindTexts[i].text = "";
+                        GridPieces[i].SetActive(false);
+                        placedPieces--;
+                        if (Colorblind.ColorblindModeActive)
+                        {
+                            setRow = i / 6;
+                            setColumn = i % 6;
+                            setColorIndex = binaryColors.IndexOf(RedValues[setRow][setColumn].ToString() + GreenValues[setRow][setColumn].ToString() + BlueValues[setRow][setColumn].ToString());
+                            GridButtonRenderers[i].material.color = colors[setColorIndex];
+                            GridColorblindTexts[i].text = shortColorNames[setColorIndex];
+                        }
                     }
-                    placedPieces++;
-                }
-                else
-                {
-                    Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, GridPieces[i].transform);
-                    GridPieces[i].SetActive(false);
-                    placedPieces--;
                 }
                 if (placedPieces == 6)
                 {
@@ -176,9 +199,10 @@ public class RGBChess : MonoBehaviour {
     void Start()
     {
         GenerateBoard();
+        ColorSwitcherColorblindText.gameObject.SetActive(Colorblind.ColorblindModeActive);
         for (int c = 0; c < 36; c++)
         {
-            ColorblindTexts[c].gameObject.SetActive(Colorblind.ColorblindModeActive);
+            GridColorblindTexts[c].gameObject.SetActive(Colorblind.ColorblindModeActive);
         }
     }
 
@@ -409,7 +433,7 @@ public class RGBChess : MonoBehaviour {
             setColumn = i % 6;
             setColorIndex = binaryColors.IndexOf(RedValues[setRow][setColumn].ToString() + GreenValues[setRow][setColumn].ToString() + BlueValues[setRow][setColumn].ToString());
             GridButtonRenderers[i].material.color = colors[setColorIndex];
-            ColorblindTexts[i].text = shortColorNames[setColorIndex];
+            GridColorblindTexts[i].text = shortColorNames[setColorIndex];
         }
     }
 

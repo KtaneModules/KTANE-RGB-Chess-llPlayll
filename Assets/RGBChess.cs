@@ -50,6 +50,7 @@ public class RGBChess : MonoBehaviour {
     int setColumn;
     int placedPieces;
     bool solveFlag;
+    bool isAnimating;
 
     string pieces = "KQRBN";
     List<string> pieceNames = new List<string> { "King", "Queen", "Rook", "Bishop", "Knight" };
@@ -104,7 +105,7 @@ public class RGBChess : MonoBehaviour {
 
    void ColorSwitch()
    {
-        if (ModuleSolved)
+        if (ModuleSolved || isAnimating)
         {
             return;
         }
@@ -130,7 +131,7 @@ public class RGBChess : MonoBehaviour {
     
     void PiecePressed(KMSelectable piece)
     {
-        if (ModuleSolved)
+        if (ModuleSolved || isAnimating)
         {
             return;
         }
@@ -153,7 +154,7 @@ public class RGBChess : MonoBehaviour {
 
     void GridButtonPressed(KMSelectable cell)
     {
-        if (ModuleSolved)
+        if (ModuleSolved || isAnimating)
         {
             return;
         }
@@ -553,6 +554,9 @@ public class RGBChess : MonoBehaviour {
 
     IEnumerator RGBChessStrike()
     {
+        StartCoroutine(ShowSubmission());
+        yield return new WaitForSeconds(genPieceAmount);
+
         for (int i = 0; i < 36; i++)
         {
             GridButtonRenderers[i].material.color = Color.red;
@@ -578,10 +582,33 @@ public class RGBChess : MonoBehaviour {
         }
 
         SetBoardColors();
+        isAnimating = false;
     }
 
     IEnumerator RGBChessSolve()
     {
+        StartCoroutine(ShowSubmission());
+        yield return new WaitForSeconds(genPieceAmount);
+
+        for (int i = 0; i < 36; i++)
+        {
+            GridButtonRenderers[i].material.color = Color.green;
+            GridColorblindTexts[i].text = "!";
+            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+            {
+                GridPieceRenderers[i].material.color = Color.green;
+                GridPieceColorblindTexts[i].text = "";
+                GridColorblindTexts[i].text = "";
+            }
+        }
+        GetComponent<KMBombModule>().HandlePass();
+        ModuleSolved = true;
+        isAnimating = false;
+    }
+
+    IEnumerator ShowSubmission()
+    {
+        isAnimating = true;
         for (int i = 0; i < 36; i++)
         {
             GridButtonRenderers[i].material.color = colors[0];
@@ -620,20 +647,6 @@ public class RGBChess : MonoBehaviour {
             SetSubmissionBoardColors();
             yield return new WaitForSeconds(1);
         }
-
-        for (int i = 0; i < 36; i++)
-        {
-            GridButtonRenderers[i].material.color = Color.green;
-            GridColorblindTexts[i].text = "!";
-            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
-            {
-                GridPieceRenderers[i].material.color = Color.green;
-                GridPieceColorblindTexts[i].text = "";
-                GridColorblindTexts[i].text = "";
-            }
-        }
-        GetComponent<KMBombModule>().HandlePass();
-        ModuleSolved = true;
     }
 
     void SetSubmissionBoardColors()

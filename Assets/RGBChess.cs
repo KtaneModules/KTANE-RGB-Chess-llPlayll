@@ -34,6 +34,8 @@ public class RGBChess : MonoBehaviour {
     string randomPosition = "";
     string randomColor = "";
     string selectedPiece = "";
+    string logGeneration = "[RGB Chess {0}] The generated solution is -";
+    string logSubmission = "[RGB Chess {0}] Submitted solution is -";
     List<string> randomPositions = new List<string> { };
     List<string> randomColors = new List<string> { };
     List<string> randomPieces = new List<string> { };
@@ -49,7 +51,7 @@ public class RGBChess : MonoBehaviour {
 
     string pieces = "KQRBN";
     List<string> pieceNames = new List<string> { "King", "Queen", "Rook", "Bishop", "Knight" };
-    List<Color> colors = new List<Color> { Color.black, Color.red, Color.green, Color.blue, Color.cyan, Color.magenta, Color.yellow, Color.white };
+    List<Color> colors = new List<Color> { Color.grey, Color.red, Color.green, Color.blue, Color.cyan, Color.magenta, Color.yellow, Color.white };
     List<string> binaryColors = new List<string> { "000", "100", "010", "001", "011", "101", "110", "111" };
     List<string> shortColorNames = new List<string> { "K", "R", "G", "B", "C", "M", "Y", "W" };
     List<string> colorNames = new List<string> {"Black", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "White"};
@@ -83,6 +85,7 @@ public class RGBChess : MonoBehaviour {
     List<string> SubmissionRedValues = new List<string> { };
     List<string> SubmissionGreenValues = new List<string> { };
     List<string> SubmissionBlueValues = new List<string> { };
+    static int genPieceAmount = 3;
 
 
     void Awake()
@@ -196,7 +199,7 @@ public class RGBChess : MonoBehaviour {
                 {
                     Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but a piece is not selected, doing nothing.", ModuleId, "ABCDEF"[i / 6].ToString() + (i % 6 + 1).ToString());
                 }
-                if (placedPieces == 6)
+                if (placedPieces == genPieceAmount)
                 {
                     Debug.LogFormat("[RGB Chess #{0}] 6 Pieces were placed, checking submission.", ModuleId);
                     SubmissionCheck();
@@ -217,7 +220,7 @@ public class RGBChess : MonoBehaviour {
 
     void GenerateBoard()
     {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < genPieceAmount; i++)
         {
             randomPosition = Rnd.Range(0, 6).ToString() + Rnd.Range(0, 6).ToString();
             while (randomPositions.Contains(randomPosition))
@@ -225,10 +228,7 @@ public class RGBChess : MonoBehaviour {
                 randomPosition = Rnd.Range(0, 6).ToString() + Rnd.Range(0, 6).ToString();
             }
             randomPositions.Add(randomPosition);
-        }
 
-        for (int i = 0; i < 6; i++)
-        {
             randomColor = Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString() + Rnd.Range(0, 2).ToString();
             while (randomColor == "000")
             {
@@ -236,19 +236,10 @@ public class RGBChess : MonoBehaviour {
             }
             randomColors.Add(randomColor);
 
-        }
-
-        for (int i = 0; i < 6; i++)
-        {
             randomPieces.Add(pieces[Rnd.Range(0, 5)].ToString());
         }
-        Debug.LogFormat("[RGB Chess #{0}] The generated pieces are - {1} {2} at {3}, {4} {5} at {6}, {7} {8} at {9}, {10} {11} at {12}, {13} {14} at {15} and {16} {17} at {18}", ModuleId,
-            LogColors(0, randomColors), LogPieces(0, randomPieces), LogCoordinates(0, randomPositions),
-            LogColors(1, randomColors), LogPieces(1, randomPieces), LogCoordinates(1, randomPositions),
-            LogColors(2, randomColors), LogPieces(2, randomPieces), LogCoordinates(2, randomPositions),
-            LogColors(3, randomColors), LogPieces(3, randomPieces), LogCoordinates(3, randomPositions),
-            LogColors(4, randomColors), LogPieces(4, randomPieces), LogCoordinates(4, randomPositions),
-            LogColors(5, randomColors), LogPieces(5, randomPieces), LogCoordinates(5, randomPositions));
+
+        LogFinal(logGeneration, randomPieces, randomColors, randomPositions);
 
         CalculateBoardColors(RedValues, GreenValues, BlueValues, randomPositions, randomColors, randomPieces);
         SetBoardColors();
@@ -271,7 +262,7 @@ public class RGBChess : MonoBehaviour {
 
     void CalculateBoardColors(List<string> redGrid, List<string> greenGrid, List<string> blueGrid, List<string> positions, List<string> colors, List<string> pieces)
     {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < genPieceAmount; i++)
         {
             int row = Int32.Parse(positions[i][0].ToString());
             int column = Int32.Parse(positions[i][1].ToString());
@@ -531,13 +522,8 @@ public class RGBChess : MonoBehaviour {
                 }
             }
         }
-        Debug.LogFormat("[RGB Chess {0}] Submitted solution is - {1} {2} at {3}, {4} {5} at {6}, {7} {8} at {9}, {10} {11} at {12}, {13} {14} at {15} and {16} {17} at {18}", ModuleId,
-            LogColors(0, submissionColors), LogPieces(0, submissionPieces), LogCoordinates(0, submissionPositions),
-            LogColors(1, submissionColors), LogPieces(1, submissionPieces), LogCoordinates(1, submissionPositions),
-            LogColors(2, submissionColors), LogPieces(2, submissionPieces), LogCoordinates(2, submissionPositions),
-            LogColors(3, submissionColors), LogPieces(3, submissionPieces), LogCoordinates(3, submissionPositions),
-            LogColors(4, submissionColors), LogPieces(4, submissionPieces), LogCoordinates(4, submissionPositions),
-            LogColors(5, submissionColors), LogPieces(5, submissionPieces), LogCoordinates(5, submissionPositions));
+        logSubmission = "[RGB Chess {0}] Submitted solution is -";
+        LogFinal(logSubmission, submissionPieces, submissionColors, submissionPositions);
         CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions, submissionColors, submissionPieces);
 
         for (int i = 0; i < 6; i++)
@@ -597,6 +583,28 @@ public class RGBChess : MonoBehaviour {
         }
 
         SetBoardColors();
+    }
+
+    void LogFinal(string log, List<string> pieceList, List<string> colorList, List<string> positions)
+    {
+        for (int i = 0; i < genPieceAmount; i++)
+        {
+            log += " " + LogColors(i, colorList) + " " + LogPieces(i, pieceList) + " at " + LogCoordinates(i, positions);
+            if (i < genPieceAmount - 2)
+            {
+                log += ",";
+            }
+            else if (i == genPieceAmount - 2)
+            {
+                log += " and";
+            }
+            else
+            {
+                log += ".";
+            }
+        }
+
+        Debug.LogFormat(log, ModuleId);
     }
 
     void Update()

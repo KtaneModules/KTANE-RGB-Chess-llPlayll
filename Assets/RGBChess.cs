@@ -35,8 +35,8 @@ public class RGBChess : MonoBehaviour {
     string randomPosition = "";
     string randomColor = "";
     string selectedPiece = "";
-    string logGeneration = "[RGB Chess {0}] The generated solution is -";
-    string logSubmission = "[RGB Chess {0}] Submitted solution is -";
+    string logGeneration = "[RGB Chess #{0}] The generated solution is -";
+    string logSubmission = "";
     List<string> randomPositions = new List<string> { };
     List<string> randomColors = new List<string> { };
     List<string> randomPieces = new List<string> { };
@@ -267,7 +267,7 @@ public class RGBChess : MonoBehaviour {
 
     void CalculateBoardColors(List<string> redGrid, List<string> greenGrid, List<string> blueGrid, List<string> positions, List<string> colors, List<string> pieces)
     {
-        for (int i = 0; i < genPieceAmount; i++)
+        for (int i = 0; i < positions.Count; i++)
         {
             int row = Int32.Parse(positions[i][0].ToString());
             int column = Int32.Parse(positions[i][1].ToString());
@@ -527,7 +527,7 @@ public class RGBChess : MonoBehaviour {
                 }
             }
         }
-        logSubmission = "[RGB Chess {0}] Submitted solution is -";
+        logSubmission = "[RGB Chess #{0}] Submitted solution is -";
         LogFinal(logSubmission, submissionPieces, submissionColors, submissionPositions);
         CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions, submissionColors, submissionPieces);
 
@@ -540,30 +540,18 @@ public class RGBChess : MonoBehaviour {
         }
         if (solveFlag)
         {
-            Debug.LogFormat("[RGB Chess {0}] Submitted solution generated the same colors as the initial ones, module solved.", ModuleId);
-            GetComponent<KMBombModule>().HandlePass();
-            ModuleSolved = true;
-            for (int i = 0; i < 36; i++)
-            {
-                GridButtonRenderers[i].material.color = Color.green;
-                GridColorblindTexts[i].text = "!";
-                if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
-                {
-                    GridPieceRenderers[i].material.color = Color.green;
-                    GridPieceColorblindTexts[i].text = "";
-                    GridColorblindTexts[i].text = "";
-                }
-            }
+            Debug.LogFormat("[RGB Chess #{0}] Submitted solution generated the same colors as the initial ones, module solved!", ModuleId);
+            StartCoroutine(RGBChessSolve());
         }
         else
         {
-            Debug.LogFormat("[RGB Chess {0}] Submitted solution did not generate the same colors as the initial ones, strike!", ModuleId);
+            Debug.LogFormat("[RGB Chess #{0}] Submitted solution did not generate the same colors as the initial ones, strike!", ModuleId);
             GetComponent<KMBombModule>().HandleStrike();
-            StartCoroutine(ModuleStrike());
+            StartCoroutine(RGBChessStrike());
         }
     }
 
-    IEnumerator ModuleStrike()
+    IEnumerator RGBChessStrike()
     {
         for (int i = 0; i < 36; i++)
         {
@@ -590,6 +578,77 @@ public class RGBChess : MonoBehaviour {
         }
 
         SetBoardColors();
+    }
+
+    IEnumerator RGBChessSolve()
+    {
+        for (int i = 0; i < 36; i++)
+        {
+            GridButtonRenderers[i].material.color = colors[0];
+        }
+
+        for (int i = 0; i < genPieceAmount; i++)
+        {
+            SubmissionRedValues = new List<string>
+            {
+            "000000",
+            "000000",
+            "000000",
+            "000000",
+            "000000",
+            "000000"
+            };
+            SubmissionGreenValues = new List<string>
+            {
+            "000000",
+            "000000",
+            "000000",
+            "000000",
+            "000000",
+            "000000"
+            };
+            SubmissionBlueValues = new List<string>
+            {
+            "000000",
+            "000000",
+            "000000",
+            "000000",
+            "000000",
+            "000000"
+            };
+            CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions.GetRange(0, i + 1), submissionColors.GetRange(0, i + 1), submissionPieces.GetRange(0, i + 1));
+            SetSubmissionBoardColors();
+            yield return new WaitForSeconds(1);
+        }
+
+        for (int i = 0; i < 36; i++)
+        {
+            GridButtonRenderers[i].material.color = Color.green;
+            GridColorblindTexts[i].text = "!";
+            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+            {
+                GridPieceRenderers[i].material.color = Color.green;
+                GridPieceColorblindTexts[i].text = "";
+                GridColorblindTexts[i].text = "";
+            }
+        }
+        GetComponent<KMBombModule>().HandlePass();
+        ModuleSolved = true;
+    }
+
+    void SetSubmissionBoardColors()
+    {
+        for (int i = 0; i < 36; i++)
+        {
+            setRow = i / 6;
+            setColumn = i % 6;
+            setColorIndex = binaryColors.IndexOf(SubmissionRedValues[setRow][setColumn].ToString() + SubmissionGreenValues[setRow][setColumn].ToString() + SubmissionBlueValues[setRow][setColumn].ToString());
+            GridButtonRenderers[i].material.color = colors[setColorIndex];
+            if (GridPieceRenderers[i].material.ToString() == "Default-Material (Instance) (UnityEngine.Material)")
+            {
+                GridColorblindTexts[i].text = shortColorNames[setColorIndex];
+            }
+        }
     }
 
     void LogFinal(string log, List<string> pieceList, List<string> colorList, List<string> positions)

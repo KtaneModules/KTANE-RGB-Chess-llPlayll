@@ -42,6 +42,7 @@ public class RGBChess : MonoBehaviour {
     List<string> submissionPositions = new List<string> { };
     List<string> submissionColors = new List<string> { };
     List<string> submissionPieces = new List<string> { };
+    int genPieceAmount = 3;
     int currentColorIndex = 7;
     int setColorIndex;
     int setRow;
@@ -51,7 +52,7 @@ public class RGBChess : MonoBehaviour {
 
     string pieces = "KQRBN";
     List<string> pieceNames = new List<string> { "King", "Queen", "Rook", "Bishop", "Knight" };
-    List<Color> colors = new List<Color> { Color.grey, Color.red, Color.green, Color.blue, Color.cyan, Color.magenta, Color.yellow, Color.white };
+    List<Color> colors = new List<Color> { new Color32(50, 50, 50, 255), Color.red, Color.green, Color.blue, Color.cyan, Color.magenta, Color.yellow, Color.white };
     List<string> binaryColors = new List<string> { "000", "100", "010", "001", "011", "101", "110", "111" };
     List<string> shortColorNames = new List<string> { "K", "R", "G", "B", "C", "M", "Y", "W" };
     List<string> colorNames = new List<string> {"Black", "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "White"};
@@ -85,8 +86,6 @@ public class RGBChess : MonoBehaviour {
     List<string> SubmissionRedValues = new List<string> { };
     List<string> SubmissionGreenValues = new List<string> { };
     List<string> SubmissionBlueValues = new List<string> { };
-    static int genPieceAmount = 3;
-
 
     void Awake()
     {
@@ -495,7 +494,7 @@ public class RGBChess : MonoBehaviour {
                 }
                 switch (GridPieceRenderers[i].material.color.ToString())
                 {
-                    case "RGBA(0.000, 0.000, 0.000, 1.000)":
+                    case "RGBA(0.196, 0.196, 0.196, 1.000)":
                         submissionColors.Add("000");
                         break;
                     case "RGBA(1.000, 0.000, 0.000, 1.000)":

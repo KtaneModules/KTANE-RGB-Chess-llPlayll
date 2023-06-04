@@ -17,6 +17,7 @@ public class RGBChess : MonoBehaviour {
     public MeshRenderer ColorSwitcherRenderer;
     public TextMesh ColorSwitcherColorblindText;
     public List<KMSelectable> PieceButtons;
+    public List<MeshRenderer> PieceButtonRenderers;
     public List<MeshRenderer> PieceTextures;
     public List<Material> PieceMaterials;
     public Material DefaultPieceMaterial;
@@ -42,7 +43,7 @@ public class RGBChess : MonoBehaviour {
     List<string> submissionPositions = new List<string> { };
     List<string> submissionColors = new List<string> { };
     List<string> submissionPieces = new List<string> { };
-    int genPieceAmount = 3;
+    int genPieceAmount = 6;
     int currentColorIndex = 7;
     int setColorIndex;
     int setRow;
@@ -139,8 +140,13 @@ public class RGBChess : MonoBehaviour {
             if (piece == PieceButtons[i])
             {
                 selectedPiece = shortColorNames[currentColorIndex] + pieces[i];
+                PieceButtonRenderers[i].material.color = colors[0];
                 Debug.LogFormat("[RGB Chess #{0}] The {1} piece was pressed, selecting the {1}.", ModuleId, pieceNames[i]);
                 Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is a {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[i]);
+            }
+            else
+            {
+                PieceButtonRenderers[i].material.color = Color.white;
             }
         }
     }
@@ -545,6 +551,7 @@ public class RGBChess : MonoBehaviour {
                 {
                     GridPieceRenderers[i].material.color = Color.green;
                     GridPieceColorblindTexts[i].text = "";
+                    GridColorblindTexts[i].text = "";
                 }
             }
         }
@@ -566,6 +573,7 @@ public class RGBChess : MonoBehaviour {
             {
                 GridPieceRenderers[i].material.color = Color.red;
                 GridPieceColorblindTexts[i].text = "";
+                GridColorblindTexts[i].text = "";
             }
         }
 
@@ -574,9 +582,9 @@ public class RGBChess : MonoBehaviour {
         placedPieces = 0;
         for (int i = 0; i < 36; i++)
         {
-            GridPieces[i].SetActive(false);
             if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
             {
+                GridPieces[i].SetActive(false);
                 GridPieceRenderers[i].material = DefaultPieceMaterial;
             }
         }

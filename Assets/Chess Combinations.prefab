@@ -18030,7 +18030,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - Standard
+  - Sprites/Diffuse
 --- !u!114 &114128031677854614
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -18082,7 +18082,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - Standard
+  - Sprites/Diffuse
 --- !u!114 &114131449258389124
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -19693,7 +19693,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - Standard
+  - Sprites/Diffuse
 --- !u!114 &114538992562070856
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -20539,6 +20539,12 @@ MonoBehaviour:
   - {fileID: 114036490467983094}
   - {fileID: 114047645786535962}
   - {fileID: 114222993117526358}
+  PieceButtonRenderers:
+  - {fileID: 23566444418700014}
+  - {fileID: 23227404849767108}
+  - {fileID: 23829516531659328}
+  - {fileID: 23523119012427004}
+  - {fileID: 23063262030611920}
   PieceTextures:
   - {fileID: 23782998057036670}
   - {fileID: 23857864805910730}
@@ -20951,7 +20957,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - Standard
+  - Sprites/Diffuse
 --- !u!114 &114808709505901634
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -21151,7 +21157,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShaderNames:
-  - Standard
+  - Sprites/Diffuse
 --- !u!114 &114838036573922214
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -21163,7 +21169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1cfb889a07d5fd4e9baed7960bb397f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _colorblindMode: 0
+  _colorblindMode: 1
 --- !u!114 &114840085075765208
 MonoBehaviour:
   m_ObjectHideFlags: 1

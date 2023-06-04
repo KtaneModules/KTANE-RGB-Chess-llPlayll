@@ -557,6 +557,10 @@ public class RGBChess : MonoBehaviour {
         StartCoroutine(ShowSubmission());
         yield return new WaitForSeconds(genPieceAmount);
 
+        yield return new WaitForSeconds(1);
+        SetBoardColors();
+        yield return new WaitForSeconds(1);
+
         for (int i = 0; i < 36; i++)
         {
             GridButtonRenderers[i].material.color = Color.red;
@@ -567,6 +571,7 @@ public class RGBChess : MonoBehaviour {
                 GridPieceColorblindTexts[i].text = "";
                 GridColorblindTexts[i].text = "";
             }
+            yield return new WaitForSeconds(0.1f);
         }
 
         yield return new WaitForSeconds(2);
@@ -600,6 +605,7 @@ public class RGBChess : MonoBehaviour {
                 GridPieceColorblindTexts[i].text = "";
                 GridColorblindTexts[i].text = "";
             }
+            yield return new WaitForSeconds(0.1f);
         }
         GetComponent<KMBombModule>().HandlePass();
         ModuleSolved = true;

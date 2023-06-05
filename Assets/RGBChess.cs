@@ -51,6 +51,7 @@ public class RGBChess : MonoBehaviour {
     int placedPieces;
     bool solveFlag;
     bool isAnimating;
+    bool isPlacingTPPiece = false;
 
     string pieces = "KQRBN";
     List<string> pieceNames = new List<string> { "King", "Queen", "Rook", "Bishop", "Knight" };
@@ -701,11 +702,88 @@ public class RGBChess : MonoBehaviour {
     private readonly string TwitchHelpMessage = @"Use !{0} to do something.";
 #pragma warning restore 414
 
-    IEnumerator ProcessTwitchCommand (string Command) {
+    IEnumerator ProcessTwitchCommand (string Command)
+    {
+        var commandArgs = Command.ToUpperInvariant().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < commandArgs.Length; i++)
+        {
+            if (commandArgs[i].Length != 2 & commandArgs[i].Length != 4)
+            {
+                yield return "sendtochaterror Invalid command!";
+            }
+        }
+
+        for (int i = 0; i < commandArgs.Length; i++)
+        {
+            if (commandArgs[i].Length == 4)
+            {
+                if (!shortColorNames.Contains(commandArgs[i][0].ToString()) || !pieces.Contains(commandArgs[i][1].ToString()) || !"ABCDEF".Contains(commandArgs[i][2].ToString()) || !"123456".Contains(commandArgs[i][3].ToString()))
+                {
+                    yield return "sendtochaterror Invalid command!";
+                }
+                else
+                {
+                    if (GridPieceRenderers[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][2]) - 6].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+                    {
+                        yield return "sendtochaterror There is already a piece at " + commandArgs[i][2].ToString() + commandArgs[i][3].ToString() + "!";
+                    }
+                    else
+                    {
+                        isPlacingTPPiece = true;
+                        yield return null;
+                        while (currentColorIndex != shortColorNames.IndexOf(commandArgs[i][0].ToString()))
+                        {
+                            ColorSwitcher.OnInteract();
+                            yield return new WaitForSeconds(0.1f);
+                        }
+                        PieceButtons[pieces.IndexOf(commandArgs[i][1].ToString())].OnInteract();
+                        GridButtons[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i].ToUpperInvariant()[2]) - 6].OnInteract();
+                        yield return new WaitForSeconds(0.1f);
+                        isPlacingTPPiece = false;
+                    }
+                }
+            }
+            else
+            {
+                if (!"ABCDEF".Contains(commandArgs[i][0].ToString()) || !"123456".Contains(commandArgs[i][1].ToString()))
+                {
+                    yield return "sendtochaterror Invalid position!";
+                }
+                if (GridPieceRenderers[Int32.Parse(commandArgs[i][1].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][0]) - 6].material.ToString() == "Default-Material (Instance) (UnityEngine.Material)")
+                {
+                    yield return "sendtochaterror There isn't a piece at " + commandArgs[i][0].ToString() + commandArgs[i][1].ToString() + "!";
+                }
+                else
+                {
+                    yield return null;
+                    GridButtons[Int32.Parse(commandArgs[i][1].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i].ToUpperInvariant()[0]) - 6].OnInteract();
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+        }
+
+        
         yield return null;
     }
 
-    IEnumerator TwitchHandleForcedSolve () {
+    IEnumerator TwitchHandleForcedSolve ()
+    {
         yield return null;
+        for (int i = 0; i < 36; i++)
+        {
+            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+            {
+                StartCoroutine(ProcessTwitchCommand("ABCDEF"[i % 6].ToString() + ((int)(i / 6) + 1).ToString()));
+            }
+        }
+        for (int i = 0; i < genPieceAmount; i++)
+        {
+            while (isPlacingTPPiece)
+            {
+                yield return null;
+            }
+            StartCoroutine(ProcessTwitchCommand(shortColorNames[binaryColors.IndexOf(randomColors[i])].ToString() + randomPieces[i] + "ABCDEF"[Int32.Parse(randomPositions[i][1].ToString())].ToString() + (Int32.Parse(randomPositions[i][0].ToString()) + 1).ToString()));
+            yield return new WaitForSeconds(0.1f);
+        }
     }
 }

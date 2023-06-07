@@ -169,7 +169,7 @@ public class RGBChess : MonoBehaviour {
                 {
                     if (!GridPieces[i].activeSelf)
                     {
-                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i / 6].ToString() + (i % 6 + 1).ToString(),
+                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString(),
                             colorNames[shortColorNames.IndexOf(selectedPiece[0].ToString())], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
 
                         GridPieces[i].SetActive(true);
@@ -188,7 +188,7 @@ public class RGBChess : MonoBehaviour {
                     }
                     else
                     {
-                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but there is already a piece on it, removing the piece placed on {1}.", ModuleId, "ABCDEF"[i / 6].ToString() + (i % 6 + 1).ToString());
+                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but there is already a piece on it, removing the piece placed on {1}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
                         GridPieceRenderers[i].material = DefaultPieceMaterial;
                         GridPieces[i].SetActive(false);
                         placedPieces--;
@@ -204,11 +204,11 @@ public class RGBChess : MonoBehaviour {
                 }
                 else
                 {
-                    Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but a piece is not selected, doing nothing.", ModuleId, "ABCDEF"[i / 6].ToString() + (i % 6 + 1).ToString());
+                    Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but a piece is not selected, doing nothing.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
                 }
                 if (placedPieces == genPieceAmount)
                 {
-                    Debug.LogFormat("[RGB Chess #{0}] 6 Pieces were placed, checking submission.", ModuleId);
+                    Debug.LogFormat("[RGB Chess #{0}] {1} Pieces were placed, checking submission.", ModuleId, genPieceAmount.ToString());
                     SubmissionCheck();
                 }
             }
@@ -572,7 +572,7 @@ public class RGBChess : MonoBehaviour {
                 GridPieceColorblindTexts[i].text = "";
                 GridColorblindTexts[i].text = "";
             }
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.05f);
         }
 
         yield return new WaitForSeconds(2);
@@ -606,7 +606,7 @@ public class RGBChess : MonoBehaviour {
                 GridPieceColorblindTexts[i].text = "";
                 GridColorblindTexts[i].text = "";
             }
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.05f);
         }
         GetComponent<KMBombModule>().HandlePass();
         ModuleSolved = true;
@@ -693,13 +693,8 @@ public class RGBChess : MonoBehaviour {
         Debug.LogFormat(log, ModuleId);
     }
 
-    void Update()
-    {
-
-    }
-
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use !{0} to do something.";
+    private readonly string TwitchHelpMessage = @"Use !{0} gka6 b4 wnf1 To place a Green King at A6, remove the piece placed at B4, and then place a White Knight at F1. For pieces, use the first letter their names, but use N for Knight instead of K. Top left cell is A1.";
 #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand (string Command)
@@ -761,8 +756,6 @@ public class RGBChess : MonoBehaviour {
                 }
             }
         }
-
-        
         yield return null;
     }
 

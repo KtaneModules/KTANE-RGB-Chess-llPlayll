@@ -121,7 +121,7 @@ public class RGBChess : MonoBehaviour {
         ColorSwitcherRenderer.material.color = colors[currentColorIndex];
         ColorSwitcherColorblindText.text = shortColorNames[currentColorIndex];
 
-        Debug.LogFormat("[RGB Chess #{0}] The color switcher was press, switching colors, current color is {1}.", ModuleId, colorNames[currentColorIndex]);
+        Debug.LogFormat("[RGB Chess #{0}] The color switcher was pressed, switching colors, current color is {1}.", ModuleId, colorNames[currentColorIndex]);
 
         if (selectedPiece != "")
         {

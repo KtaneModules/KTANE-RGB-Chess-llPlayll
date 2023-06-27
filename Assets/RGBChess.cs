@@ -185,13 +185,15 @@ public class RGBChess : MonoBehaviour {
                             GridPieceColorblindTexts[i].text = "";
                         }
                         placedPieces++;
+                        submissionPositions.Add(((int)(i / 6)).ToString() + (i % 6).ToString());
+                        submissionColors.Add(binaryColors[currentColorIndex]);
+                        submissionPieces.Add(selectedPiece[1].ToString());
                     }
                     else
                     {
                         Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but there is already a piece on it, removing the piece placed on {1}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
                         GridPieceRenderers[i].material = DefaultPieceMaterial;
                         GridPieces[i].SetActive(false);
-                        placedPieces--;
                         if (Colorblind.ColorblindModeActive)
                         {
                             setRow = i / 6;
@@ -200,6 +202,10 @@ public class RGBChess : MonoBehaviour {
                             GridButtonRenderers[i].material.color = colors[setColorIndex];
                             GridColorblindTexts[i].text = shortColorNames[setColorIndex];
                         }
+                        placedPieces--;
+                        submissionPieces.RemoveAt(submissionPositions.IndexOf(((int)(i / 6)).ToString() + (i % 6).ToString()));
+                        submissionColors.RemoveAt(submissionPositions.IndexOf(((int)(i / 6)).ToString() + (i % 6).ToString()));
+                        submissionPositions.Remove(((int)(i / 6)).ToString() + (i % 6).ToString());
                     }
                 }
                 else
@@ -473,62 +479,7 @@ public class RGBChess : MonoBehaviour {
         "000000",
         "000000"
         };
-        submissionPositions = new List<string> { };
-        submissionColors = new List<string> { };
-        submissionPieces = new List<string> { };
         solveFlag = true;
-        for (int i = 0; i < 36; i++)
-        {
-            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
-            {
-                submissionPositions.Add(((int)(i / 6)).ToString() + (i % 6).ToString());
-                switch (GridPieceRenderers[i].material.ToString())
-                {
-                    case "King (Instance) (UnityEngine.Material)":
-                        submissionPieces.Add("K");
-                        break;
-                    case "Queen (Instance) (UnityEngine.Material)":
-                        submissionPieces.Add("Q");
-                        break;
-                    case "Rook (Instance) (UnityEngine.Material)":
-                        submissionPieces.Add("R");
-                        break;
-                    case "Bishop (Instance) (UnityEngine.Material)":
-                        submissionPieces.Add("B");
-                        break;
-                    case "Knight (Instance) (UnityEngine.Material)":
-                        submissionPieces.Add("N");
-                        break;
-                }
-                switch (GridPieceRenderers[i].material.color.ToString())
-                {
-                    case "RGBA(0.196, 0.196, 0.196, 1.000)":
-                        submissionColors.Add("000");
-                        break;
-                    case "RGBA(1.000, 0.000, 0.000, 1.000)":
-                        submissionColors.Add("100");
-                        break;
-                    case "RGBA(0.000, 1.000, 0.000, 1.000)":
-                        submissionColors.Add("010");
-                        break;
-                    case "RGBA(0.000, 0.000, 1.000, 1.000)":
-                        submissionColors.Add("001");
-                        break;
-                    case "RGBA(0.000, 1.000, 1.000, 1.000)":
-                        submissionColors.Add("011");
-                        break;
-                    case "RGBA(1.000, 0.000, 1.000, 1.000)":
-                        submissionColors.Add("101");
-                        break;
-                    case "RGBA(1.000, 0.922, 0.016, 1.000)":
-                        submissionColors.Add("110");
-                        break;
-                    case "RGBA(1.000, 1.000, 1.000, 1.000)":
-                        submissionColors.Add("111");
-                        break;
-                }
-            }
-        }
         logSubmission = "[RGB Chess #{0}] Submitted solution is -";
         LogFinal(logSubmission, submissionPieces, submissionColors, submissionPositions);
         CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions, submissionColors, submissionPieces);
@@ -542,13 +493,10 @@ public class RGBChess : MonoBehaviour {
         }
         if (solveFlag)
         {
-            Debug.LogFormat("[RGB Chess #{0}] Submitted solution generated the same colors as the initial ones, module solved!", ModuleId);
             StartCoroutine(RGBChessSolve());
         }
         else
         {
-            Debug.LogFormat("[RGB Chess #{0}] Submitted solution did not generate the same colors as the initial ones, strike!", ModuleId);
-            GetComponent<KMBombModule>().HandleStrike();
             StartCoroutine(RGBChessStrike());
         }
     }
@@ -557,10 +505,6 @@ public class RGBChess : MonoBehaviour {
     {
         StartCoroutine(ShowSubmission());
         yield return new WaitForSeconds(genPieceAmount);
-
-        yield return new WaitForSeconds(1);
-        SetBoardColors();
-        yield return new WaitForSeconds(1);
 
         for (int i = 0; i < 36; i++)
         {
@@ -578,6 +522,9 @@ public class RGBChess : MonoBehaviour {
         yield return new WaitForSeconds(2);
 
         placedPieces = 0;
+        submissionPositions = new List<string> { };
+        submissionColors = new List<string> { };
+        submissionPieces = new List<string> { };
         for (int i = 0; i < 36; i++)
         {
             if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
@@ -586,7 +533,8 @@ public class RGBChess : MonoBehaviour {
                 GridPieceRenderers[i].material = DefaultPieceMaterial;
             }
         }
-
+        Debug.LogFormat("[RGB Chess #{0}] Submitted solution did not generate the same colors as the initial ones, strike!", ModuleId);
+        GetComponent<KMBombModule>().HandleStrike();
         SetBoardColors();
         isAnimating = false;
     }
@@ -608,6 +556,7 @@ public class RGBChess : MonoBehaviour {
             }
             yield return new WaitForSeconds(0.05f);
         }
+        Debug.LogFormat("[RGB Chess #{0}] Submitted solution generated the same colors as the initial ones, module solved!", ModuleId);
         GetComponent<KMBombModule>().HandlePass();
         ModuleSolved = true;
         isAnimating = false;

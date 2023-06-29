@@ -518,22 +518,7 @@ public class RGBChess : MonoBehaviour {
             }
             yield return new WaitForSeconds(0.05f);
         }
-
-        yield return new WaitForSeconds(2);
-
-        placedPieces = 0;
-        submissionPositions = new List<string> { };
-        submissionColors = new List<string> { };
-        submissionPieces = new List<string> { };
-        for (int i = 0; i < 36; i++)
-        {
-            if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
-            {
-                GridPieces[i].SetActive(false);
-                GridPieceRenderers[i].material = DefaultPieceMaterial;
-            }
-        }
-        Debug.LogFormat("[RGB Chess #{0}] Submitted solution did not generate the same colors as the initial ones, strike!", ModuleId);
+        Debug.LogFormat("[RGB Chess #{0}] Submitted pieces did not generate the same board as the desired solution, strike!", ModuleId);
         GetComponent<KMBombModule>().HandleStrike();
         SetBoardColors();
         isAnimating = false;
@@ -556,7 +541,7 @@ public class RGBChess : MonoBehaviour {
             }
             yield return new WaitForSeconds(0.05f);
         }
-        Debug.LogFormat("[RGB Chess #{0}] Submitted solution generated the same colors as the initial ones, module solved!", ModuleId);
+        Debug.LogFormat("[RGB Chess #{0}] Submitted pieces generated the same board as the desired solution, module solved!", ModuleId);
         GetComponent<KMBombModule>().HandlePass();
         ModuleSolved = true;
         isAnimating = false;

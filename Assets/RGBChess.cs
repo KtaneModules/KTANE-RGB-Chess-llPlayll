@@ -43,7 +43,7 @@ public class RGBChess : MonoBehaviour {
     List<string> submissionPositions = new List<string> { };
     List<string> submissionColors = new List<string> { };
     List<string> submissionPieces = new List<string> { };
-    int genPieceAmount = 6;
+    int genPieceAmount = 4;
     int currentColorIndex = 7;
     int setColorIndex;
     int setRow;
@@ -169,25 +169,32 @@ public class RGBChess : MonoBehaviour {
                 {
                     if (!GridPieces[i].activeSelf)
                     {
-                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString(),
-                            colorNames[shortColorNames.IndexOf(selectedPiece[0].ToString())], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
-
-                        GridPieces[i].SetActive(true);
-                        GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
-                        GridPieceRenderers[i].material.color = colors[shortColorNames.IndexOf(selectedPiece[0].ToString())];
-                        if (Colorblind.ColorblindModeActive)
+                        if (placedPieces != genPieceAmount)
                         {
-                            GridColorblindTexts[i].text = "";
-                            GridPieceColorblindTexts[i].text = selectedPiece[0].ToString() + selectedPiece[1].ToString();
+                            Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString(),
+                                colorNames[shortColorNames.IndexOf(selectedPiece[0].ToString())], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
+
+                            GridPieces[i].SetActive(true);
+                            GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
+                            GridPieceRenderers[i].material.color = colors[shortColorNames.IndexOf(selectedPiece[0].ToString())];
+                            if (Colorblind.ColorblindModeActive)
+                            {
+                                GridColorblindTexts[i].text = "";
+                                GridPieceColorblindTexts[i].text = selectedPiece[0].ToString() + selectedPiece[1].ToString();
+                            }
+                            else
+                            {
+                                GridPieceColorblindTexts[i].text = "";
+                            }
+                            placedPieces++;
+                            submissionPositions.Add(((int)(i / 6)).ToString() + (i % 6).ToString());
+                            submissionColors.Add(binaryColors[currentColorIndex]);
+                            submissionPieces.Add(selectedPiece[1].ToString());
                         }
                         else
                         {
-                            GridPieceColorblindTexts[i].text = "";
+                            return;
                         }
-                        placedPieces++;
-                        submissionPositions.Add(((int)(i / 6)).ToString() + (i % 6).ToString());
-                        submissionColors.Add(binaryColors[currentColorIndex]);
-                        submissionPieces.Add(selectedPiece[1].ToString());
                     }
                     else
                     {
@@ -505,13 +512,16 @@ public class RGBChess : MonoBehaviour {
     {
         StartCoroutine(ShowSubmission());
         yield return new WaitForSeconds(genPieceAmount);
-
+        List<int> rememberPositions = new List<int>();
+        List<Color> rememberColors = new List<Color>();
         for (int i = 0; i < 36; i++)
         {
             GridButtonRenderers[i].material.color = Color.red;
             GridColorblindTexts[i].text = "X";
             if (GridPieceRenderers[i].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
             {
+                rememberPositions.Add(i);
+                rememberColors.Add(GridPieceRenderers[i].material.color);
                 GridPieceRenderers[i].material.color = Color.red;
                 GridPieceColorblindTexts[i].text = "";
                 GridColorblindTexts[i].text = "";
@@ -520,6 +530,13 @@ public class RGBChess : MonoBehaviour {
         }
         Debug.LogFormat("[RGB Chess #{0}] Submitted pieces did not generate the same board as the desired solution, strike!", ModuleId);
         GetComponent<KMBombModule>().HandleStrike();
+        for (int i = 0; i < 36; i++)
+        {
+            if (rememberPositions.Contains(i))
+            {
+                GridPieceRenderers[i].material.color = rememberColors[rememberPositions.IndexOf(i)];
+            }
+        }
         SetBoardColors();
         isAnimating = false;
     }
@@ -639,6 +656,7 @@ public class RGBChess : MonoBehaviour {
             if (commandArgs[i].Length != 2 & commandArgs[i].Length != 4)
             {
                 yield return "sendtochaterror Invalid command!";
+                break;
             }
         }
 
@@ -649,12 +667,14 @@ public class RGBChess : MonoBehaviour {
                 if (!shortColorNames.Contains(commandArgs[i][0].ToString()) || !pieces.Contains(commandArgs[i][1].ToString()) || !"ABCDEF".Contains(commandArgs[i][2].ToString()) || !"123456".Contains(commandArgs[i][3].ToString()))
                 {
                     yield return "sendtochaterror Invalid command!";
+                    break;
                 }
                 else
                 {
                     if (GridPieceRenderers[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][2]) - 6].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
                     {
                         yield return "sendtochaterror There is already a piece at " + commandArgs[i][2].ToString() + commandArgs[i][3].ToString() + "!";
+                        break;
                     }
                     else
                     {
@@ -677,10 +697,12 @@ public class RGBChess : MonoBehaviour {
                 if (!"ABCDEF".Contains(commandArgs[i][0].ToString()) || !"123456".Contains(commandArgs[i][1].ToString()))
                 {
                     yield return "sendtochaterror Invalid position!";
+                    break;
                 }
                 if (GridPieceRenderers[Int32.Parse(commandArgs[i][1].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][0]) - 6].material.ToString() == "Default-Material (Instance) (UnityEngine.Material)")
                 {
                     yield return "sendtochaterror There isn't a piece at " + commandArgs[i][0].ToString() + commandArgs[i][1].ToString() + "!";
+                    break;
                 }
                 else
                 {

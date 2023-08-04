@@ -43,12 +43,12 @@ public class RGBChess : MonoBehaviour {
     List<string> submissionPositions = new List<string> { };
     List<string> submissionColors = new List<string> { };
     List<string> submissionPieces = new List<string> { };
-    int genPieceAmount = 4;
     int currentColorIndex = 7;
     int setColorIndex;
     int setRow;
     int setColumn;
     int placedPieces;
+    int genPieceAmount;
     bool solveFlag;
     bool isAnimating;
     bool isPlacingTPPiece = false;
@@ -90,9 +90,27 @@ public class RGBChess : MonoBehaviour {
     List<string> SubmissionGreenValues = new List<string> { };
     List<string> SubmissionBlueValues = new List<string> { };
 
+    private RGBChessSettings Settings = new RGBChessSettings();
+
     void Awake()
     {
         ModuleId = ModuleIdCounter++;
+        ModConfig<RGBChessSettings> modConfig = new ModConfig<RGBChessSettings>("RGBChessSettings");
+        Settings = modConfig.Settings;
+        modConfig.Settings = Settings;
+        if (Settings.generationPieceAmount < 1)
+        {
+            genPieceAmount = 1;
+        }
+        else if (Settings.generationPieceAmount > 36)
+        {
+            genPieceAmount = 36;
+        }
+        else
+        {
+            genPieceAmount = Settings.generationPieceAmount;
+        }
+        Debug.LogFormat("[RGB Chess #{0}] The module will generate {1} pieces.", ModuleId, genPieceAmount);
         ColorSwitcher.OnInteract += delegate () { ColorSwitch(); return false; };
         foreach (KMSelectable piece in PieceButtons)
         {
@@ -101,7 +119,7 @@ public class RGBChess : MonoBehaviour {
         foreach (KMSelectable cell in GridButtons)
         {
             cell.OnInteract += delegate () { GridButtonPressed(cell); return false; };
-        }
+        }  
     }
 
    void ColorSwitch()
@@ -735,4 +753,26 @@ public class RGBChess : MonoBehaviour {
             yield return new WaitForSeconds(0.1f);
         }
     }
+
+    class RGBChessSettings
+    {
+        public int generationPieceAmount = 4;
+    }
+
+    static Dictionary<string, object>[] TweaksEditorSettings = new Dictionary<string, object>[]
+    {
+        new Dictionary<string, object>
+        {
+            { "Filename", "RGBChessSettings.json" },
+            { "Name", "RGB Chess Settings" },
+            { "Listing", new List<Dictionary<string, object>>{
+                new Dictionary<string, object>
+                {
+                    { "Key", "generationPieceAmount" },
+                    { "Text", "Changes the amount of colored pieces that will be generated at the start." }
+                },
+            } }
+        }
+    };
 }
+

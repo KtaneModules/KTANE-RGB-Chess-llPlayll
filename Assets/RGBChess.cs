@@ -16,6 +16,7 @@ public class RGBChess : MonoBehaviour {
     public KMSelectable ColorSwitcher;
     public MeshRenderer ColorSwitcherRenderer;
     public TextMesh ColorSwitcherColorblindText;
+    public TextMesh PiecesRemaining;
     public List<KMSelectable> PieceButtons;
     public List<MeshRenderer> PieceButtonRenderers;
     public List<MeshRenderer> PieceTextures;
@@ -111,6 +112,7 @@ public class RGBChess : MonoBehaviour {
             genPieceAmount = Settings.generationPieceAmount;
         }
         Debug.LogFormat("[RGB Chess #{0}] The module will generate {1} pieces.", ModuleId, genPieceAmount);
+        PiecesRemaining.text = genPieceAmount.ToString();
         ColorSwitcher.OnInteract += delegate () { ColorSwitch(); return false; };
         foreach (KMSelectable piece in PieceButtons)
         {
@@ -205,6 +207,7 @@ public class RGBChess : MonoBehaviour {
                                 GridPieceColorblindTexts[i].text = "";
                             }
                             placedPieces++;
+                            PiecesRemaining.text = (genPieceAmount - placedPieces).ToString();
                             submissionPositions.Add(((int)(i / 6)).ToString() + (i % 6).ToString());
                             submissionColors.Add(binaryColors[currentColorIndex]);
                             submissionPieces.Add(selectedPiece[1].ToString());
@@ -228,6 +231,7 @@ public class RGBChess : MonoBehaviour {
                             GridColorblindTexts[i].text = shortColorNames[setColorIndex];
                         }
                         placedPieces--;
+                        PiecesRemaining.text = (genPieceAmount - placedPieces).ToString();
                         submissionPieces.RemoveAt(submissionPositions.IndexOf(((int)(i / 6)).ToString() + (i % 6).ToString()));
                         submissionColors.RemoveAt(submissionPositions.IndexOf(((int)(i / 6)).ToString() + (i % 6).ToString()));
                         submissionPositions.Remove(((int)(i / 6)).ToString() + (i % 6).ToString());
@@ -532,6 +536,7 @@ public class RGBChess : MonoBehaviour {
         yield return new WaitForSeconds(genPieceAmount);
         List<int> rememberPositions = new List<int>();
         List<Color> rememberColors = new List<Color>();
+        List<string> rememberPieces = new List<string>();
         for (int i = 0; i < 36; i++)
         {
             GridButtonRenderers[i].material.color = Color.red;
@@ -540,6 +545,7 @@ public class RGBChess : MonoBehaviour {
             {
                 rememberPositions.Add(i);
                 rememberColors.Add(GridPieceRenderers[i].material.color);
+                rememberPieces.Add(GridPieceColorblindTexts[i].text);
                 GridPieceRenderers[i].material.color = Color.red;
                 GridPieceColorblindTexts[i].text = "";
                 GridColorblindTexts[i].text = "";
@@ -548,14 +554,16 @@ public class RGBChess : MonoBehaviour {
         }
         Debug.LogFormat("[RGB Chess #{0}] Submitted pieces did not generate the same board as the desired solution, strike!", ModuleId);
         GetComponent<KMBombModule>().HandleStrike();
+        SetBoardColors();
         for (int i = 0; i < 36; i++)
         {
             if (rememberPositions.Contains(i))
             {
                 GridPieceRenderers[i].material.color = rememberColors[rememberPositions.IndexOf(i)];
+                GridPieceColorblindTexts[i].text = rememberPieces[rememberPositions.IndexOf(i)];
+                GridColorblindTexts[i].text = "";
             }
         }
-        SetBoardColors();
         isAnimating = false;
     }
 

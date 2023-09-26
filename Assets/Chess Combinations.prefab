@@ -427,6 +427,24 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1081082796854326
+GameObject:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4797156420750910}
+  - component: {fileID: 23763780420435056}
+  - component: {fileID: 102072838846260100}
+  - component: {fileID: 114251984747843292}
+  m_Layer: 0
+  m_Name: Colorblind Text
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1096173465147722
 GameObject:
   m_ObjectHideFlags: 1
@@ -1973,7 +1991,7 @@ GameObject:
   m_IsActive: 1
 --- !u!1 &1440389507670334
 GameObject:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   serializedVersion: 5
@@ -1983,7 +2001,7 @@ GameObject:
   - component: {fileID: 102200772015760936}
   - component: {fileID: 114441850135438092}
   m_Layer: 0
-  m_Name: Colorblind Text
+  m_Name: Pieces Left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4286,7 +4304,7 @@ Transform:
   m_LocalScale: {x: 1.5592093, y: 1.5592078, z: 1.5592078}
   m_Children:
   - {fileID: 4626916115293818}
-  - {fileID: 4415723268052234}
+  - {fileID: 4797156420750910}
   m_Father: {fileID: 4820708317099674}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4580,6 +4598,7 @@ Transform:
   - {fileID: 4386666791210728}
   - {fileID: 4418190595600998}
   - {fileID: 4820708317099674}
+  - {fileID: 4415723268052234}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5054,11 +5073,11 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1440389507670334}
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0.072, y: 0.67, z: -0.01}
-  m_LocalScale: {x: 0.039513305, y: 0.030585658, z: 282.5339}
+  m_LocalPosition: {x: 0.062058453, y: 0.015, z: 0.0095}
+  m_LocalScale: {x: 0.0011199998, y: 0.00086000125, z: 1}
   m_Children: []
-  m_Father: {fileID: 4153110732702564}
-  m_RootOrder: 1
+  m_Father: {fileID: 4257340207950476}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!4 &4417073688341628
 Transform:
@@ -6320,6 +6339,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4865076662753722}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!4 &4797156420750910
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1081082796854326}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0.072, y: 0.67, z: -0.01}
+  m_LocalScale: {x: 0.039513305, y: 0.030585658, z: 282.5339}
+  m_Children: []
+  m_Father: {fileID: 4153110732702564}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!4 &4797708589370624
 Transform:
@@ -11937,6 +11969,40 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!23 &23763780420435056
+MeshRenderer:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1081082796854326}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_Materials:
+  - {fileID: 2100000, guid: ea7383a11cc28a24cbea15073b68bf56, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!23 &23769883139261120
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -16219,6 +16285,27 @@ TextMesh:
   m_Color:
     serializedVersion: 2
     rgba: 4289374890
+--- !u!102 &102072838846260100
+TextMesh:
+  serializedVersion: 3
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1081082796854326}
+  m_Text: W
+  m_OffsetZ: 0
+  m_CharacterSize: 1
+  m_LineSpacing: 1
+  m_Anchor: 4
+  m_Alignment: 0
+  m_TabSize: 4
+  m_FontSize: 400
+  m_FontStyle: 0
+  m_RichText: 1
+  m_Font: {fileID: 12800000, guid: 1ebe1d96973a920409b439b3a0e2bb63, type: 3}
+  m_Color:
+    serializedVersion: 2
+    rgba: 4289374890
 --- !u!102 &102078402686446334
 TextMesh:
   serializedVersion: 3
@@ -16373,7 +16460,7 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1440389507670334}
-  m_Text: W
+  m_Text: 0
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
@@ -16386,7 +16473,7 @@ TextMesh:
   m_Font: {fileID: 12800000, guid: 1ebe1d96973a920409b439b3a0e2bb63, type: 3}
   m_Color:
     serializedVersion: 2
-    rgba: 4289374890
+    rgba: 4278190080
 --- !u!102 &102207369396197474
 TextMesh:
   serializedVersion: 3
@@ -18652,6 +18739,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - Standard
+--- !u!114 &114251984747843292
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1081082796854326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1005838349, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShaderNames:
+  - GUI/KT 3D Text
 --- !u!114 &114252950449893840
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -20532,7 +20632,8 @@ MonoBehaviour:
   Colorblind: {fileID: 114838036573922214}
   ColorSwitcher: {fileID: 114414161164051826}
   ColorSwitcherRenderer: {fileID: 23622725278977036}
-  ColorSwitcherColorblindText: {fileID: 102200772015760936}
+  ColorSwitcherColorblindText: {fileID: 102072838846260100}
+  PiecesRemaining: {fileID: 102200772015760936}
   PieceButtons:
   - {fileID: 114747410655121824}
   - {fileID: 114429033597076678}

@@ -141,12 +141,12 @@ public class RGBChess : MonoBehaviour {
         ColorSwitcherRenderer.material.color = colors[currentColorIndex];
         ColorSwitcherColorblindText.text = shortColorNames[currentColorIndex];
 
-        Debug.LogFormat("[RGB Chess #{0}] The color switcher was pressed, switching colors, current color is {1}.", ModuleId, colorNames[currentColorIndex]);
+        //Debug.LogFormat("[RGB Chess #{0}] The color switcher was pressed, switching colors, current color is {1}.", ModuleId, colorNames[currentColorIndex]);
 
         if (selectedPiece != "")
         {
             selectedPiece = shortColorNames[currentColorIndex] + selectedPiece[1];
-            Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
+            //Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
         }   
     }
     
@@ -163,8 +163,8 @@ public class RGBChess : MonoBehaviour {
             {
                 selectedPiece = shortColorNames[currentColorIndex] + pieces[i];
                 PieceButtonRenderers[i].material.color = colors[0];
-                Debug.LogFormat("[RGB Chess #{0}] The {1} piece was pressed, selecting the {1}.", ModuleId, pieceNames[i]);
-                Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is a {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[i]);
+                //Debug.LogFormat("[RGB Chess #{0}] The {1} piece was pressed, selecting the {1}.", ModuleId, pieceNames[i]);
+                //Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is a {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[i]);
             }
             else
             {
@@ -191,8 +191,7 @@ public class RGBChess : MonoBehaviour {
                     {
                         if (placedPieces != genPieceAmount)
                         {
-                            Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString(),
-                                colorNames[shortColorNames.IndexOf(selectedPiece[0].ToString())], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
+                            //Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString(), colorNames[shortColorNames.IndexOf(selectedPiece[0].ToString())], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
 
                             GridPieces[i].SetActive(true);
                             GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
@@ -219,7 +218,7 @@ public class RGBChess : MonoBehaviour {
                     }
                     else
                     {
-                        Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but there is already a piece on it, removing the piece placed on {1}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
+                        //Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but there is already a piece on it, removing the piece placed on {1}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
                         GridPieceRenderers[i].material = DefaultPieceMaterial;
                         GridPieces[i].SetActive(false);
                         if (Colorblind.ColorblindModeActive)
@@ -239,11 +238,11 @@ public class RGBChess : MonoBehaviour {
                 }
                 else
                 {
-                    Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but a piece is not selected, doing nothing.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
+                    //Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but a piece is not selected, doing nothing.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
                 }
                 if (placedPieces == genPieceAmount)
                 {
-                    Debug.LogFormat("[RGB Chess #{0}] {1} Pieces were placed, checking submission.", ModuleId, genPieceAmount.ToString());
+                    Debug.LogFormat("[RGB Chess #{0}] All {1} Pieces were placed, checking submission.", ModuleId, genPieceAmount.ToString());
                     SubmissionCheck();
                 }
             }
@@ -283,7 +282,7 @@ public class RGBChess : MonoBehaviour {
 
         LogFinal(logGeneration, randomPieces, randomColors, randomPositions);
 
-        CalculateBoardColors(RedValues, GreenValues, BlueValues, randomPositions, randomColors, randomPieces);
+        CalculateBoardColors(RedValues, GreenValues, BlueValues, randomPositions, randomColors, randomPieces, false, true);
         SetBoardColors();
     }
 
@@ -302,7 +301,7 @@ public class RGBChess : MonoBehaviour {
         return pieceNames[pieces.IndexOf(piecesList[index])];
     }
 
-    void CalculateBoardColors(List<string> redGrid, List<string> greenGrid, List<string> blueGrid, List<string> positions, List<string> colors, List<string> pieces)
+    void CalculateBoardColors(List<string> redGrid, List<string> greenGrid, List<string> blueGrid, List<string> positions, List<string> colors, List<string> pieces, bool submission, bool log)
     {
         for (int i = 0; i < positions.Count; i++)
         {
@@ -457,6 +456,27 @@ public class RGBChess : MonoBehaviour {
                 default:
                     break;
             }
+
+        }
+        if (log)
+        {
+            if (!submission)
+            {
+                Debug.LogFormat("[RGB Chess #{0}] Generated board colors are:", ModuleId);
+            }
+            else
+            {
+                Debug.LogFormat("[RGB Chess #{0}] Generated board colors by the submission are:", ModuleId);
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                string rowColorLog = "";
+                for (int j = 0; j < 6; j++)
+                {
+                    rowColorLog += shortColorNames[binaryColors.IndexOf(redGrid[i][j].ToString() + greenGrid[i][j].ToString() + blueGrid[i][j].ToString())];
+                }
+                Debug.LogFormat("[RGB Chess #{0}] {1}", ModuleId, rowColorLog);
+            }
         }
     }
 
@@ -511,7 +531,7 @@ public class RGBChess : MonoBehaviour {
         solveFlag = true;
         logSubmission = "[RGB Chess #{0}] Submitted solution is -";
         LogFinal(logSubmission, submissionPieces, submissionColors, submissionPositions);
-        CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions, submissionColors, submissionPieces);
+        CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions, submissionColors, submissionPieces, true, true);
 
         for (int i = 0; i < 6; i++)
         {
@@ -627,7 +647,7 @@ public class RGBChess : MonoBehaviour {
             "000000",
             "000000"
             };
-            CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions.GetRange(0, i + 1), submissionColors.GetRange(0, i + 1), submissionPieces.GetRange(0, i + 1));
+            CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions.GetRange(0, i + 1), submissionColors.GetRange(0, i + 1), submissionPieces.GetRange(0, i + 1), true, false);
             SetSubmissionBoardColors();
             yield return new WaitForSeconds(1);
         }

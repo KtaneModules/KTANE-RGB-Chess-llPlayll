@@ -673,13 +673,9 @@ public class RGBChess : MonoBehaviour {
         for (int i = 0; i < genPieceAmount; i++)
         {
             log += " " + LogColors(i, colorList) + " " + LogPieces(i, pieceList) + " at " + LogCoordinates(i, positions);
-            if (i < genPieceAmount - 2)
+            if (i < genPieceAmount - 1)
             {
                 log += ",";
-            }
-            else if (i == genPieceAmount - 2)
-            {
-                log += " and";
             }
             else
             {

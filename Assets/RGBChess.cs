@@ -111,7 +111,7 @@ public class RGBChess : MonoBehaviour {
         {
             genPieceAmount = Settings.generationPieceAmount;
         }
-        Debug.LogFormat("[RGB Chess #{0}] The module will generate {1} pieces.", ModuleId, genPieceAmount);
+        Debug.LogFormat("[RGB Chess #{0}] The module will generate {1} piece{2}.", ModuleId, genPieceAmount, genPieceAmount > 1 ? "s" : "");
         PiecesRemaining.text = genPieceAmount.ToString();
         ColorSwitcher.OnInteract += delegate () { ColorSwitch(); return false; };
         foreach (KMSelectable piece in PieceButtons)
@@ -242,7 +242,7 @@ public class RGBChess : MonoBehaviour {
                 }
                 if (placedPieces == genPieceAmount)
                 {
-                    Debug.LogFormat("[RGB Chess #{0}] All {1} Pieces were placed, checking submission.", ModuleId, genPieceAmount.ToString());
+                    Debug.LogFormat("[RGB Chess #{0}] {1}{2} piece{3} {4} placed, checking submission.", ModuleId, genPieceAmount > 1 ? "All " : "", genPieceAmount.ToString(), genPieceAmount > 1 ? "s" : "", genPieceAmount > 1 ? "were" : "was");
                     SubmissionCheck();
                 }
             }
@@ -572,7 +572,7 @@ public class RGBChess : MonoBehaviour {
             }
             yield return new WaitForSeconds(0.05f);
         }
-        Debug.LogFormat("[RGB Chess #{0}] Submitted pieces did not generate the same board as the desired solution, strike!", ModuleId);
+        Debug.LogFormat("[RGB Chess #{0}] Submitted piece{1} did not generate the same board as the desired solution, strike!", ModuleId, genPieceAmount > 1 ? "s" : "");
         GetComponent<KMBombModule>().HandleStrike();
         SetBoardColors();
         for (int i = 0; i < 36; i++)
@@ -604,7 +604,7 @@ public class RGBChess : MonoBehaviour {
             }
             yield return new WaitForSeconds(0.05f);
         }
-        Debug.LogFormat("[RGB Chess #{0}] Submitted pieces generated the same board as the desired solution, module solved!", ModuleId);
+        Debug.LogFormat("[RGB Chess #{0}] Submitted piece{1} generated the same board as the desired solution, module solved!", ModuleId, genPieceAmount > 1 ? "s" : "");
         GetComponent<KMBombModule>().HandlePass();
         ModuleSolved = true;
         isAnimating = false;

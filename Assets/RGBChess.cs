@@ -32,6 +32,7 @@ public class RGBChess : MonoBehaviour {
     static int ModuleIdCounter = 1;
     int ModuleId;
     private bool ModuleSolved;
+    bool colorblindActive;
 
     string randomPosition = "";
     string randomColor = "";
@@ -121,7 +122,8 @@ public class RGBChess : MonoBehaviour {
         foreach (KMSelectable cell in GridButtons)
         {
             cell.OnInteract += delegate () { GridButtonPressed(cell); return false; };
-        }  
+        }
+        colorblindActive = Colorblind.ColorblindModeActive;
     }
 
    void ColorSwitch()
@@ -196,7 +198,7 @@ public class RGBChess : MonoBehaviour {
                             GridPieces[i].SetActive(true);
                             GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
                             GridPieceRenderers[i].material.color = colors[shortColorNames.IndexOf(selectedPiece[0].ToString())];
-                            if (Colorblind.ColorblindModeActive)
+                            if (colorblindActive)
                             {
                                 GridColorblindTexts[i].text = "";
                                 GridPieceColorblindTexts[i].text = selectedPiece[0].ToString() + selectedPiece[1].ToString();
@@ -221,7 +223,7 @@ public class RGBChess : MonoBehaviour {
                         //Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, but there is already a piece on it, removing the piece placed on {1}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString());
                         GridPieceRenderers[i].material = DefaultPieceMaterial;
                         GridPieces[i].SetActive(false);
-                        if (Colorblind.ColorblindModeActive)
+                        if (colorblindActive)
                         {
                             setRow = i / 6;
                             setColumn = i % 6;
@@ -252,10 +254,10 @@ public class RGBChess : MonoBehaviour {
     void Start()
     {
         GenerateBoard();
-        ColorSwitcherColorblindText.gameObject.SetActive(Colorblind.ColorblindModeActive);
+        ColorSwitcherColorblindText.gameObject.SetActive(colorblindActive);
         for (int c = 0; c < 36; c++)
         {
-            GridColorblindTexts[c].gameObject.SetActive(Colorblind.ColorblindModeActive);
+            GridColorblindTexts[c].gameObject.SetActive(colorblindActive);
         }
     }
 
@@ -573,6 +575,36 @@ public class RGBChess : MonoBehaviour {
             yield return new WaitForSeconds(0.05f);
         }
         Debug.LogFormat("[RGB Chess #{0}] Submitted piece{1} did not generate the same board as the desired solution, strike!", ModuleId, genPieceAmount > 1 ? "s" : "");
+
+        for (int c = 0; c < 36; c++)
+        {
+            string pos = ((int)(c / 6)).ToString() + (c % 6).ToString();
+            if (submissionPositions.Contains(pos))
+            {
+                if (!randomPositions.Contains(pos))
+                {
+                    GridPieceRenderers[c].material.color = new Color32(50, 50, 50, 255);
+                    if (colorblindActive) { GridPieceColorblindTexts[c].text = "K"; }
+                }
+                else
+                {
+                    int idx1 = randomPositions.IndexOf(pos);
+                    int idx2 = submissionPositions.IndexOf(pos);
+                    if (randomColors[idx1] != submissionColors[idx2] || randomPieces[idx1] != submissionPieces[idx2])
+                    {
+                        GridPieceRenderers[c].material.color = Color.yellow;
+                        if (colorblindActive) { GridPieceColorblindTexts[c].text = "Y"; }
+                    }
+                    else
+                    {
+                        GridPieceRenderers[c].material.color = Color.green;
+                        if (colorblindActive) { GridPieceColorblindTexts[c].text = "G"; }
+                    }
+                }
+            }
+        }
+        yield return new WaitForSeconds(3f);
+
         GetComponent<KMBombModule>().HandleStrike();
         SetBoardColors();
         for (int i = 0; i < 36; i++)
@@ -687,74 +719,92 @@ public class RGBChess : MonoBehaviour {
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use !{0} gka6 b4 wnf1 To place a Green King at A6, remove the piece placed at B4, and then place a White Knight at F1. For pieces, use the first letter their names, but use N for Knight instead of K. Top left cell is A1.";
+    private readonly string TwitchHelpMessage = @"Use !{0} gka6 b4 wnf1 To place a Green King at A6, remove the piece placed at B4, and then place a White Knight at F1. For pieces, use the first letter their names, but use N for Knight instead of K. Top left cell is A1. !{0} cb to activate colourblind mode.";
 #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand (string Command)
     {
         var commandArgs = Command.ToUpperInvariant().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-        for (int i = 0; i < commandArgs.Length; i++)
+        if (commandArgs[0] == "CB")
         {
-            if (commandArgs[i].Length != 2 & commandArgs[i].Length != 4)
+            yield return null;
+            colorblindActive = true;
+            ColorSwitcherColorblindText.gameObject.SetActive(colorblindActive);
+            for (int c = 0; c < 36; c++)
             {
-                yield return "sendtochaterror Invalid command!";
-                break;
+                GridColorblindTexts[c].gameObject.SetActive(colorblindActive);
+                string pis = ((int)(c / 6)).ToString() + (c % 6).ToString();
+                if (submissionPositions.Contains(pis))
+                {
+                    GridPieceColorblindTexts[c].text = shortColorNames[binaryColors.IndexOf(submissionColors[submissionPositions.IndexOf(pis)])] + submissionPieces[submissionPositions.IndexOf(pis)];
+                }
             }
         }
-
-        for (int i = 0; i < commandArgs.Length; i++)
+        else
         {
-            if (commandArgs[i].Length == 4)
+            for (int i = 0; i < commandArgs.Length; i++)
             {
-                if (!shortColorNames.Contains(commandArgs[i][0].ToString()) || !pieces.Contains(commandArgs[i][1].ToString()) || !"ABCDEF".Contains(commandArgs[i][2].ToString()) || !"123456".Contains(commandArgs[i][3].ToString()))
+                if (commandArgs[i].Length != 2 & commandArgs[i].Length != 4)
                 {
                     yield return "sendtochaterror Invalid command!";
                     break;
                 }
-                else
+            }
+
+            for (int i = 0; i < commandArgs.Length; i++)
+            {
+                if (commandArgs[i].Length == 4)
                 {
-                    if (GridPieceRenderers[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][2]) - 6].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
+                    if (!shortColorNames.Contains(commandArgs[i][0].ToString()) || !pieces.Contains(commandArgs[i][1].ToString()) || !"ABCDEF".Contains(commandArgs[i][2].ToString()) || !"123456".Contains(commandArgs[i][3].ToString()))
                     {
-                        yield return "sendtochaterror There is already a piece at " + commandArgs[i][2].ToString() + commandArgs[i][3].ToString() + "!";
+                        yield return "sendtochaterror Invalid command!";
                         break;
                     }
                     else
                     {
-                        isPlacingTPPiece = true;
-                        yield return null;
-                        while (currentColorIndex != shortColorNames.IndexOf(commandArgs[i][0].ToString()))
+                        if (GridPieceRenderers[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][2]) - 6].material.ToString() != "Default-Material (Instance) (UnityEngine.Material)")
                         {
-                            ColorSwitcher.OnInteract();
-                            yield return new WaitForSeconds(0.1f);
+                            yield return "sendtochaterror There is already a piece at " + commandArgs[i][2].ToString() + commandArgs[i][3].ToString() + "!";
+                            break;
                         }
-                        PieceButtons[pieces.IndexOf(commandArgs[i][1].ToString())].OnInteract();
-                        GridButtons[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i].ToUpperInvariant()[2]) - 6].OnInteract();
-                        yield return new WaitForSeconds(0.1f);
-                        isPlacingTPPiece = false;
+                        else
+                        {
+                            isPlacingTPPiece = true;
+                            yield return null;
+                            while (currentColorIndex != shortColorNames.IndexOf(commandArgs[i][0].ToString()))
+                            {
+                                ColorSwitcher.OnInteract();
+                                yield return new WaitForSeconds(0.1f);
+                            }
+                            PieceButtons[pieces.IndexOf(commandArgs[i][1].ToString())].OnInteract();
+                            GridButtons[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i].ToUpperInvariant()[2]) - 6].OnInteract();
+                            yield return new WaitForSeconds(0.1f);
+                            isPlacingTPPiece = false;
+                        }
                     }
-                }
-            }
-            else
-            {
-                if (!"ABCDEF".Contains(commandArgs[i][0].ToString()) || !"123456".Contains(commandArgs[i][1].ToString()))
-                {
-                    yield return "sendtochaterror Invalid position!";
-                    break;
-                }
-                if (GridPieceRenderers[Int32.Parse(commandArgs[i][1].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][0]) - 6].material.ToString() == "Default-Material (Instance) (UnityEngine.Material)")
-                {
-                    yield return "sendtochaterror There isn't a piece at " + commandArgs[i][0].ToString() + commandArgs[i][1].ToString() + "!";
-                    break;
                 }
                 else
                 {
-                    yield return null;
-                    GridButtons[Int32.Parse(commandArgs[i][1].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i].ToUpperInvariant()[0]) - 6].OnInteract();
-                    yield return new WaitForSeconds(0.1f);
+                    if (!"ABCDEF".Contains(commandArgs[i][0].ToString()) || !"123456".Contains(commandArgs[i][1].ToString()))
+                    {
+                        yield return "sendtochaterror Invalid position!";
+                        break;
+                    }
+                    if (GridPieceRenderers[Int32.Parse(commandArgs[i][1].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i][0]) - 6].material.ToString() == "Default-Material (Instance) (UnityEngine.Material)")
+                    {
+                        yield return "sendtochaterror There isn't a piece at " + commandArgs[i][0].ToString() + commandArgs[i][1].ToString() + "!";
+                        break;
+                    }
+                    else
+                    {
+                        yield return null;
+                        GridButtons[Int32.Parse(commandArgs[i][1].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i].ToUpperInvariant()[0]) - 6].OnInteract();
+                        yield return new WaitForSeconds(0.1f);
+                    }
                 }
             }
-        }
-        yield return null;
+            yield return null;
+        } 
     }
 
     IEnumerator TwitchHandleForcedSolve ()

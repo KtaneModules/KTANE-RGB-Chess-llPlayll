@@ -28,6 +28,11 @@ public class RGBChess : MonoBehaviour {
     public List<GameObject> GridPieces;
     public List<MeshRenderer> GridPieceRenderers;
     public List<TextMesh> GridPieceColorblindTexts;
+    public MeshRenderer MOPRenderer;
+    public List<MeshRenderer> MOCRenderers;
+    public TextMesh IntersectionCount;
+    public GameObject InfoDisplay;
+    public MeshRenderer SolveRenderer;
 
     static int ModuleIdCounter = 1;
     int ModuleId;
@@ -39,23 +44,28 @@ public class RGBChess : MonoBehaviour {
     string selectedPiece = "";
     string logGeneration = "[RGB Chess #{0}] The generated solution is -";
     string logSubmission = "";
+    string mostOccurringPiece = "";
     List<string> randomPositions = new List<string> { };
     List<string> randomColors = new List<string> { };
     List<string> randomPieces = new List<string> { };
     List<string> submissionPositions = new List<string> { };
     List<string> submissionColors = new List<string> { };
     List<string> submissionPieces = new List<string> { };
+    List<string> visitedPositions = new List<string> { };
+    List<string> mostOccurringColors = new List<string> { };
     int currentColorIndex = 7;
     int setColorIndex;
     int setRow;
     int setColumn;
     int placedPieces;
     int genPieceAmount;
+    int intersections;
     bool solveFlag;
     bool isAnimating;
     bool isPlacingTPPiece = false;
+    bool softStruck;
 
-    string pieces = "KQRBN";
+    string pieceShortNames = "KQRBN";
     List<string> pieceNames = new List<string> { "King", "Queen", "Rook", "Bishop", "Knight" };
     List<Color> colors = new List<Color> { new Color32(50, 50, 50, 255), Color.red, Color.green, Color.blue, Color.cyan, Color.magenta, Color.yellow, Color.white };
     List<string> binaryColors = new List<string> { "000", "100", "010", "001", "011", "101", "110", "111" };
@@ -163,7 +173,7 @@ public class RGBChess : MonoBehaviour {
         {
             if (piece == PieceButtons[i])
             {
-                selectedPiece = shortColorNames[currentColorIndex] + pieces[i];
+                selectedPiece = shortColorNames[currentColorIndex] + pieceShortNames[i];
                 PieceButtonRenderers[i].material.color = colors[0];
                 //Debug.LogFormat("[RGB Chess #{0}] The {1} piece was pressed, selecting the {1}.", ModuleId, pieceNames[i]);
                 //Debug.LogFormat("[RGB Chess #{0}] Currently selected piece is a {1} {2}.", ModuleId, colorNames[currentColorIndex], pieceNames[i]);
@@ -196,7 +206,7 @@ public class RGBChess : MonoBehaviour {
                             //Debug.LogFormat("[RGB Chess #{0}] The {1} cell was pressed, and there isn't already a piece on it, placing the currently selected piece, which is a {2} {3}.", ModuleId, "ABCDEF"[i % 6].ToString() + (i / 6 + 1).ToString(), colorNames[shortColorNames.IndexOf(selectedPiece[0].ToString())], pieceNames[pieces.IndexOf(selectedPiece[1].ToString())]);
 
                             GridPieces[i].SetActive(true);
-                            GridPieceRenderers[i].material = PieceMaterials[pieces.IndexOf(selectedPiece[1].ToString())];
+                            GridPieceRenderers[i].material = PieceMaterials[pieceShortNames.IndexOf(selectedPiece[1].ToString())];
                             GridPieceRenderers[i].material.color = colors[shortColorNames.IndexOf(selectedPiece[0].ToString())];
                             if (colorblindActive)
                             {
@@ -259,6 +269,10 @@ public class RGBChess : MonoBehaviour {
         {
             GridColorblindTexts[c].gameObject.SetActive(colorblindActive);
         }
+        if (Settings.noHints)
+        {
+            SolveRenderer.material.color = Color.red;
+        }
     }
 
     void GenerateBoard()
@@ -279,13 +293,21 @@ public class RGBChess : MonoBehaviour {
             }
             randomColors.Add(randomColor);
 
-            randomPieces.Add(pieces[Rnd.Range(0, 5)].ToString());
+            randomPieces.Add(pieceShortNames[Rnd.Range(0, 5)].ToString());
         }
 
         LogFinal(logGeneration, randomPieces, randomColors, randomPositions);
 
+        mostOccurringPiece = randomPieces.GroupBy(p => p).OrderBy(p => p.Count()).Select(p => p.First()).Last();
+        List<string> temp = randomColors.ConvertAll(x => x);
+        string moc1 = temp.GroupBy(p => p).OrderBy(p => p.Count()).Select(p => p.First()).Last();
+        mostOccurringColors.Add(moc1);
+        temp.RemoveAll(c => c == moc1);
+        mostOccurringColors.Add(temp.GroupBy(p => p).OrderBy(p => p.Count()).Select(p => p.First()).Last());
+
         CalculateBoardColors(RedValues, GreenValues, BlueValues, randomPositions, randomColors, randomPieces, false, true);
         SetBoardColors();
+        if (!Settings.noHints) SetInfoDisplay();
     }
 
     string LogCoordinates(int index, List<string> positions)
@@ -300,11 +322,12 @@ public class RGBChess : MonoBehaviour {
 
     string LogPieces(int index, List<string> piecesList)
     {
-        return pieceNames[pieces.IndexOf(piecesList[index])];
+        return pieceNames[pieceShortNames.IndexOf(piecesList[index])];
     }
 
     void CalculateBoardColors(List<string> redGrid, List<string> greenGrid, List<string> blueGrid, List<string> positions, List<string> colors, List<string> pieces, bool submission, bool log)
     {
+        intersections = 0;
         for (int i = 0; i < positions.Count; i++)
         {
             int row = Int32.Parse(positions[i][0].ToString());
@@ -479,11 +502,26 @@ public class RGBChess : MonoBehaviour {
                 }
                 Debug.LogFormat("[RGB Chess #{0}] {1}", ModuleId, rowColorLog);
             }
+            if (!submission)
+            {
+                Debug.LogFormat("[RGB Chess #{0}] Additional solution information:", ModuleId);
+                Debug.LogFormat("[RGB Chess #{0}] The amount of intersections - {1}.", ModuleId, intersections);
+                Debug.LogFormat("[RGB Chess #{0}] The most occurring piece - {1}.", ModuleId, pieceNames[pieceShortNames.IndexOf(mostOccurringPiece)]);
+                Debug.LogFormat("[RGB Chess #{0}] The two most occurring piece colors - {1} and {2}.", ModuleId, colorNames[binaryColors.IndexOf(mostOccurringColors[0])], colorNames[binaryColors.IndexOf(mostOccurringColors[1])]);
+            }
         }
     }
 
     void AddColorToCell(int row, int column, string color, List<string> redGrid, List<string> greenGrid, List<string> blueGrid)
     {
+        if (visitedPositions.Contains(row.ToString() + column.ToString()))
+        {
+            intersections++;
+        }
+        else
+        {
+            visitedPositions.Add(row.ToString() + column.ToString());
+        }
         redGrid[row] = redGrid[row].Substring(0, column) + ((redGrid[row][column] + color[0]) % 2).ToString() + redGrid[row].Substring(column + 1);
         greenGrid[row] = greenGrid[row].Substring(0, column) + ((greenGrid[row][column] + color[1]) % 2).ToString() + greenGrid[row].Substring(column + 1);
         blueGrid[row] = blueGrid[row].Substring(0, column) + ((blueGrid[row][column] + color[2]) % 2).ToString() + blueGrid[row].Substring(column + 1);
@@ -499,6 +537,62 @@ public class RGBChess : MonoBehaviour {
             GridButtonRenderers[i].material.color = colors[setColorIndex];
             GridColorblindTexts[i].text = shortColorNames[setColorIndex];
         }
+    }
+
+    void SetInfoDisplay()
+    {
+        MOPRenderer.material = PieceMaterials[pieceShortNames.IndexOf(mostOccurringPiece)];
+        int randomMOCPiece = Rnd.Range(0, 5);
+        string MOCIntersection = "";
+        for (int i = 0; i < 3; i++)
+        {
+            MOCIntersection += ((mostOccurringColors[0][i] + mostOccurringColors[1][i]) % 2).ToString();
+        }
+        switch (randomMOCPiece)
+        {
+            case 0:
+                MOCRenderers[0].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[1].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[6].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[7].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[3].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[4].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                break;
+            case 1:
+                MOCRenderers[1].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[7].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[0].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[2].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[3].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[4].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[6].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[8].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                break;
+            case 2:
+                MOCRenderers[1].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[2].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[7].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[8].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[0].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[3].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                MOCRenderers[6].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                break;
+            case 3:
+                MOCRenderers[0].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[8].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[2].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[6].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[4].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                break;
+            case 4:
+                MOCRenderers[0].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[7].material.color = colors[binaryColors.IndexOf(mostOccurringColors[0])];
+                MOCRenderers[1].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[6].material.color = colors[binaryColors.IndexOf(mostOccurringColors[1])];
+                MOCRenderers[5].material.color = colors[binaryColors.IndexOf(MOCIntersection)];
+                break;
+        }
+        IntersectionCount.text = intersections.ToString();
     }
 
     void SubmissionCheck()
@@ -574,38 +668,43 @@ public class RGBChess : MonoBehaviour {
             }
             yield return new WaitForSeconds(0.05f);
         }
-        Debug.LogFormat("[RGB Chess #{0}] Submitted piece{1} did not generate the same board as the desired solution, strike!", ModuleId, genPieceAmount > 1 ? "s" : "");
+        Debug.LogFormat("[RGB Chess #{0}] Submitted piece{1} did not generate the same board as the desired solution{2}", ModuleId, genPieceAmount > 1 ? "s" : "", softStruck ? ", giving a soft-strike." : ",  strike!");
 
-        for (int c = 0; c < 36; c++)
+        if (!Settings.noHints)
         {
-            string pos = ((int)(c / 6)).ToString() + (c % 6).ToString();
-            if (submissionPositions.Contains(pos))
+            for (int c = 0; c < 36; c++)
             {
-                if (!randomPositions.Contains(pos))
+                string pos = ((int)(c / 6)).ToString() + (c % 6).ToString();
+                if (submissionPositions.Contains(pos))
                 {
-                    GridPieceRenderers[c].material.color = new Color32(50, 50, 50, 255);
-                    if (colorblindActive) { GridPieceColorblindTexts[c].text = "K"; }
-                }
-                else
-                {
-                    int idx1 = randomPositions.IndexOf(pos);
-                    int idx2 = submissionPositions.IndexOf(pos);
-                    if (randomColors[idx1] != submissionColors[idx2] || randomPieces[idx1] != submissionPieces[idx2])
+                    if (!randomPositions.Contains(pos))
                     {
-                        GridPieceRenderers[c].material.color = Color.yellow;
-                        if (colorblindActive) { GridPieceColorblindTexts[c].text = "Y"; }
+                        GridPieceRenderers[c].material.color = new Color32(50, 50, 50, 255);
+                        if (colorblindActive) { GridPieceColorblindTexts[c].text = "K"; }
                     }
                     else
                     {
-                        GridPieceRenderers[c].material.color = Color.green;
-                        if (colorblindActive) { GridPieceColorblindTexts[c].text = "G"; }
+                        int idx1 = randomPositions.IndexOf(pos);
+                        int idx2 = submissionPositions.IndexOf(pos);
+                        if (randomColors[idx1] != submissionColors[idx2] || randomPieces[idx1] != submissionPieces[idx2])
+                        {
+                            GridPieceRenderers[c].material.color = Color.yellow;
+                            if (colorblindActive) { GridPieceColorblindTexts[c].text = "Y"; }
+                        }
+                        else
+                        {
+                            GridPieceRenderers[c].material.color = Color.green;
+                            if (colorblindActive) { GridPieceColorblindTexts[c].text = "G"; }
+                        }
                     }
                 }
             }
         }
         yield return new WaitForSeconds(3f);
 
-        GetComponent<KMBombModule>().HandleStrike();
+        if (softStruck || Settings.noHints) GetComponent<KMBombModule>().HandleStrike();
+        else softStruck = true;
+        
         SetBoardColors();
         for (int i = 0; i < 36; i++)
         {
@@ -637,6 +736,7 @@ public class RGBChess : MonoBehaviour {
             yield return new WaitForSeconds(0.05f);
         }
         Debug.LogFormat("[RGB Chess #{0}] Submitted piece{1} generated the same board as the desired solution, module solved!", ModuleId, genPieceAmount > 1 ? "s" : "");
+        StartCoroutine(RotateInfoDisplay());
         GetComponent<KMBombModule>().HandlePass();
         ModuleSolved = true;
         isAnimating = false;
@@ -682,6 +782,15 @@ public class RGBChess : MonoBehaviour {
             CalculateBoardColors(SubmissionRedValues, SubmissionGreenValues, SubmissionBlueValues, submissionPositions.GetRange(0, i + 1), submissionColors.GetRange(0, i + 1), submissionPieces.GetRange(0, i + 1), true, false);
             SetSubmissionBoardColors();
             yield return new WaitForSeconds(1);
+        }
+    }
+
+    IEnumerator RotateInfoDisplay()
+    {
+        for (int i = 0; i < 45; i++)
+        {
+            InfoDisplay.transform.Rotate(0, 0, 4);
+            yield return new WaitForEndOfFrame();
         }
     }
 
@@ -755,7 +864,7 @@ public class RGBChess : MonoBehaviour {
             {
                 if (commandArgs[i].Length == 4)
                 {
-                    if (!shortColorNames.Contains(commandArgs[i][0].ToString()) || !pieces.Contains(commandArgs[i][1].ToString()) || !"ABCDEF".Contains(commandArgs[i][2].ToString()) || !"123456".Contains(commandArgs[i][3].ToString()))
+                    if (!shortColorNames.Contains(commandArgs[i][0].ToString()) || !pieceShortNames.Contains(commandArgs[i][1].ToString()) || !"ABCDEF".Contains(commandArgs[i][2].ToString()) || !"123456".Contains(commandArgs[i][3].ToString()))
                     {
                         yield return "sendtochaterror Invalid command!";
                         break;
@@ -776,7 +885,7 @@ public class RGBChess : MonoBehaviour {
                                 ColorSwitcher.OnInteract();
                                 yield return new WaitForSeconds(0.1f);
                             }
-                            PieceButtons[pieces.IndexOf(commandArgs[i][1].ToString())].OnInteract();
+                            PieceButtons[pieceShortNames.IndexOf(commandArgs[i][1].ToString())].OnInteract();
                             GridButtons[Int32.Parse(commandArgs[i][3].ToString()) * 6 + "ABCDEF".IndexOf(commandArgs[i].ToUpperInvariant()[2]) - 6].OnInteract();
                             yield return new WaitForSeconds(0.1f);
                             isPlacingTPPiece = false;
@@ -831,6 +940,7 @@ public class RGBChess : MonoBehaviour {
     class RGBChessSettings
     {
         public int generationPieceAmount = 4;
+        public bool noHints = false;
     }
 
     static Dictionary<string, object>[] TweaksEditorSettings = new Dictionary<string, object>[]
@@ -843,8 +953,13 @@ public class RGBChess : MonoBehaviour {
                 new Dictionary<string, object>
                 {
                     { "Key", "generationPieceAmount" },
-                    { "Text", "Changes the amount of colored pieces that will be generated at the start." }
+                    { "Text", "Changes the amount of colored pieces that will be generated at the start." },
                 },
+                new Dictionary<string, object>
+                {
+                    { "Key", "noHints" },
+                    { "Text", "If this is enabled, the module will not display ANY hints and will only strike normally (no soft-strikes)." },
+                }
             } }
         }
     };

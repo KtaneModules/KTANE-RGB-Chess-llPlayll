@@ -52,6 +52,7 @@ public class RGBChess : MonoBehaviour {
     List<string> submissionColors = new List<string> { };
     List<string> submissionPieces = new List<string> { };
     List<string> visitedPositions = new List<string> { };
+    List<string> intersectionPositions = new List<string> { };
     List<string> mostOccurringColors = new List<string> { };
     int currentColorIndex = 7;
     int setColorIndex;
@@ -303,7 +304,8 @@ public class RGBChess : MonoBehaviour {
         string moc1 = temp.GroupBy(p => p).OrderBy(p => p.Count()).Select(p => p.First()).Last();
         mostOccurringColors.Add(moc1);
         temp.RemoveAll(c => c == moc1);
-        mostOccurringColors.Add(temp.GroupBy(p => p).OrderBy(p => p.Count()).Select(p => p.First()).Last());
+        if (temp.Count == 0) mostOccurringColors.Add("000");
+        else mostOccurringColors.Add(temp.GroupBy(p => p).OrderBy(p => p.Count()).Select(p => p.First()).Last());
 
         CalculateBoardColors(RedValues, GreenValues, BlueValues, randomPositions, randomColors, randomPieces, false, true);
         SetBoardColors();
@@ -327,53 +329,64 @@ public class RGBChess : MonoBehaviour {
 
     void CalculateBoardColors(List<string> redGrid, List<string> greenGrid, List<string> blueGrid, List<string> positions, List<string> colors, List<string> pieces, bool submission, bool log)
     {
-        intersections = 0;
         for (int i = 0; i < positions.Count; i++)
         {
+            List<string> addingCells = new List<string>() { };
             int row = Int32.Parse(positions[i][0].ToString());
             int column = Int32.Parse(positions[i][1].ToString());
-            AddColorToCell(row, column, colors[i], redGrid, greenGrid, blueGrid);
+            addingCells.Add(row.ToString() + column.ToString());
+            //AddColorToCell(row, column, colors[i], redGrid, greenGrid, blueGrid);
             switch (pieces[i])
             {
                 case "K":
                     if (row + 1 < 6)
                     {
-                        AddColorToCell(row + 1, column, colors[i], redGrid, greenGrid, blueGrid);
+                        //AddColorToCell(row + 1, column, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add((row + 1).ToString() + column.ToString());
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row + 1, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row + 1, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row + 1).ToString() + (column + 1).ToString());
                         }
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row + 1, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row + 1, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row + 1).ToString() + (column - 1).ToString());
                         }
                     }
                     if (row - 1 >= 0)
                     {
-                        AddColorToCell(row - 1, column, colors[i], redGrid, greenGrid, blueGrid);
+                        //AddColorToCell(row - 1, column, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add((row - 1).ToString() + column.ToString());
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row - 1, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row - 1, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row - 1).ToString() + (column + 1).ToString());
                         }
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row - 1, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row - 1, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row - 1).ToString() + (column - 1).ToString());
                         }
                     }
                     if (column + 1 < 6)
                     {
-                        AddColorToCell(row, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                        //AddColorToCell(row, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add(row.ToString() + (column + 1).ToString());
                     }
                     if (column - 1 >= 0)
                     {
-                        AddColorToCell(row, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                        //AddColorToCell(row, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add(row.ToString() + (column - 1).ToString());
                     }
                     break;
                 case "R":
                     for (int r = 0; r < 6; r++)
                     {
-                        AddColorToCell(row, r, colors[i], redGrid, greenGrid, blueGrid);
-                        AddColorToCell(r, column, colors[i], redGrid, greenGrid, blueGrid);
+                        //AddColorToCell(row, r, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add(row.ToString() + r.ToString());
+                        //AddColorToCell(r, column, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add(r.ToString() + column.ToString());
                     }
                     break;
                 case "B":
@@ -383,22 +396,26 @@ public class RGBChess : MonoBehaviour {
                         {
                             if (column + b < 6)
                             {
-                                AddColorToCell(row + b, column + b, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row + b, column + b, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row + b).ToString() + (column + b).ToString());
                             }
                             if (column - b >= 0)
                             {
-                                AddColorToCell(row + b, column - b, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row + b, column - b, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row + b).ToString() + (column - b).ToString());
                             }
                         }
                         if (row - b >= 0)
                         {
                             if (column + b < 6)
                             {
-                                AddColorToCell(row - b, column + b, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row - b, column + b, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row - b).ToString() + (column + b).ToString());
                             }
                             if (column - b >= 0)
                             {
-                                AddColorToCell(row - b, column - b, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row - b, column - b, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row - b).ToString() + (column - b).ToString());
                             }
                         }
                     }
@@ -406,28 +423,34 @@ public class RGBChess : MonoBehaviour {
                 case "Q":
                     for (int q = 0; q < 6; q++)
                     {
-                        AddColorToCell(row, q, colors[i], redGrid, greenGrid, blueGrid);
-                        AddColorToCell(q, column, colors[i], redGrid, greenGrid, blueGrid);
+                        //AddColorToCell(row, q, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add(row.ToString() + q.ToString());
+                        //AddColorToCell(q, column, colors[i], redGrid, greenGrid, blueGrid);
+                        addingCells.Add(q.ToString() + column.ToString());
                         if (row + q < 6)
                         {
                             if (column + q < 6)
                             {
-                                AddColorToCell(row + q, column + q, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row + q, column + q, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row + q).ToString() + (column + q).ToString());
                             }
                             if (column - q >= 0)
                             {
-                                AddColorToCell(row + q, column - q, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row + q, column - q, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row + q).ToString() + (column - q).ToString());
                             }
                         }
                         if (row - q >= 0)
                         {
                             if (column + q < 6)
                             {
-                                AddColorToCell(row - q, column + q, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row - q, column + q, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row - q).ToString() + (column + q).ToString());
                             }
                             if (column - q >= 0)
                             {
-                                AddColorToCell(row - q, column - q, colors[i], redGrid, greenGrid, blueGrid);
+                                //AddColorToCell(row - q, column - q, colors[i], redGrid, greenGrid, blueGrid);
+                                addingCells.Add((row - q).ToString() + (column - q).ToString());
                             }
                         }
                     }
@@ -437,49 +460,68 @@ public class RGBChess : MonoBehaviour {
                     {
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row - 2, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row - 2, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row - 2).ToString() + (column - 1).ToString());
                         }
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row - 2, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row - 2, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row - 2).ToString() + (column + 1).ToString());
                         }
                     }
                     if (row + 2 < 6)
                     {
                         if (column - 1 >= 0)
                         {
-                            AddColorToCell(row + 2, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row + 2, column - 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row + 2).ToString() + (column - 1).ToString());
                         }
                         if (column + 1 < 6)
                         {
-                            AddColorToCell(row + 2, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row + 2, column + 1, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row + 2).ToString() + (column + 1).ToString());
                         }
                     }
                     if (column - 2 >= 0)
                     {
                         if (row - 1 >= 0)
                         {
-                            AddColorToCell(row - 1, column - 2, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row - 1, column - 2, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row - 1).ToString() + (column - 2).ToString());
                         }
                         if (row + 1 < 6)
                         {
-                            AddColorToCell(row + 1, column - 2, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row + 1, column - 2, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row + 1).ToString() + (column - 2).ToString());
                         }
                     }
                     if (column + 2 < 6)
                     {
                         if (row - 1 >= 0)
                         {
-                            AddColorToCell(row - 1, column + 2, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row - 1, column + 2, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row - 1).ToString() + (column + 2).ToString());
                         }
                         if (row + 1 < 6)
                         {
-                            AddColorToCell(row + 1, column + 2, colors[i], redGrid, greenGrid, blueGrid);
+                            //AddColorToCell(row + 1, column + 2, colors[i], redGrid, greenGrid, blueGrid);
+                            addingCells.Add((row + 1).ToString() + (column + 2).ToString());
                         }
                     }
                     break;
                 default:
                     break;
+            }
+
+            List<string> uniqueAdds = new List<string>();
+            for (int j = 0; j < addingCells.Count; j++)
+            {
+                if (uniqueAdds.Contains(addingCells[j])) continue;
+                else
+                {
+                    AddColorToCell(addingCells[j][0] - 48, addingCells[j][1] - 48, colors[i], redGrid, greenGrid, blueGrid);
+                    uniqueAdds.Add(addingCells[j]);
+                }
             }
 
         }
@@ -504,6 +546,7 @@ public class RGBChess : MonoBehaviour {
             }
             if (!submission)
             {
+                intersections = intersectionPositions.Count;
                 Debug.LogFormat("[RGB Chess #{0}] Additional solution information:", ModuleId);
                 Debug.LogFormat("[RGB Chess #{0}] The amount of intersections - {1}.", ModuleId, intersections);
                 Debug.LogFormat("[RGB Chess #{0}] The most occurring piece - {1}.", ModuleId, pieceNames[pieceShortNames.IndexOf(mostOccurringPiece)]);
@@ -514,14 +557,8 @@ public class RGBChess : MonoBehaviour {
 
     void AddColorToCell(int row, int column, string color, List<string> redGrid, List<string> greenGrid, List<string> blueGrid)
     {
-        if (visitedPositions.Contains(row.ToString() + column.ToString()))
-        {
-            intersections++;
-        }
-        else
-        {
-            visitedPositions.Add(row.ToString() + column.ToString());
-        }
+        if (!visitedPositions.Contains(row.ToString() + column.ToString())) visitedPositions.Add(row.ToString() + column.ToString());
+        else if (!intersectionPositions.Contains(row.ToString() + column.ToString())) intersectionPositions.Add(row.ToString() + column.ToString());
         redGrid[row] = redGrid[row].Substring(0, column) + ((redGrid[row][column] + color[0]) % 2).ToString() + redGrid[row].Substring(column + 1);
         greenGrid[row] = greenGrid[row].Substring(0, column) + ((greenGrid[row][column] + color[1]) % 2).ToString() + greenGrid[row].Substring(column + 1);
         blueGrid[row] = blueGrid[row].Substring(0, column) + ((blueGrid[row][column] + color[2]) % 2).ToString() + blueGrid[row].Substring(column + 1);
